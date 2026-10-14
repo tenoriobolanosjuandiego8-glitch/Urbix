@@ -34,6 +34,21 @@ python manage.py runserver
 
 Abre http://127.0.0.1:8000/
 
+## Despliegue en Render
+
+El archivo `render.yaml` configura un servicio web Django y una base de datos
+PostgreSQL. Para desplegarlo, en Render selecciona **New > Blueprint**, conecta
+este repositorio y confirma los recursos declarados. Render instalará las
+dependencias, recopilará los archivos estáticos y ejecutará las migraciones.
+
+Render genera `DJANGO_SECRET_KEY` y conecta `DATABASE_URL` automáticamente.
+Para cargar los datos iniciales de demostración, ejecuta una vez
+`python manage.py seed_data` desde el Shell del servicio.
+
+Los archivos subidos por usuarios se guardan en el disco efímero del servicio;
+para conservarlos entre despliegues, configura almacenamiento externo antes de
+usar cargas de imágenes en producción.
+
 ## 3. Usuarios de prueba (creados por `seed_data`)
 
 | Rol           | Correo               | Contraseña       |

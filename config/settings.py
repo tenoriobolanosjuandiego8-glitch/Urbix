@@ -35,6 +35,9 @@ CSRF_TRUSTED_ORIGINS = [
     h for h in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if h
 ]
 
+if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Aplicaciones
 INSTALLED_APPS = [
     'django.contrib.admin',
