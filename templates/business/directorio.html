@@ -1,0 +1,48 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Centro Empresarial{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Centro Empresarial URBIX</span>{% endblock %}
+{% block page_title %}Negocios locales de Popayán{% endblock %}
+{% block page_head_actions %}
+{% if user.is_authenticated %}<a href="{% url 'business:register' %}" class="btn btn-primary btn-sm"><i class="bi bi-shop"></i> Registra tu negocio</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="get" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+  <div class="input-wrap" style="flex:1;min-width:220px;">
+    <i class="bi bi-search"></i><input type="search" name="q" value="{{ query }}" placeholder="Buscar negocio...">
+  </div>
+  <select name="tipo" onchange="this.form.submit()" style="max-width:240px;">
+    <option value="">Todos los tipos</option>
+    {% for value, label in types %}<option value="{{ value }}" {% if active_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+</form>
+
+<div class="grid grid-3">
+  {% for b in businesses %}
+  <a href="{% url 'business:detail' b.pk %}" class="card" data-aos="fade-up" style="text-decoration:none;position:relative;">
+    {% if b.effective_plan != 'gratuito' %}
+      <span class="badge" style="position:absolute;top:12px;right:12px;z-index:2;background:{% if b.effective_plan == 'premium' %}linear-gradient(135deg,#ffd700,#ffb800){% else %}rgba(76,255,110,.85){% endif %};color:#1a1200;">
+        <i class="bi bi-patch-check-fill"></i> {{ b.get_plan_display }}
+      </span>
+    {% endif %}
+    {% if b.cover_image %}<img class="card-img" src="{{ b.cover_image.url }}" alt="{{ b.name }}">
+    {% else %}<div class="card-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface-strong);"><i class="bi bi-shop" style="font-size:2rem;color:var(--text-dim);"></i></div>{% endif %}
+    <div class="card-body">
+      <span class="badge">{{ b.get_business_type_display }}</span>
+      <h3 class="card-title" style="margin-top:8px;">{{ b.name }}</h3>
+      {% if b.address %}<p class="text-dim" style="font-size:.82rem;"><i class="bi bi-geo-alt"></i> {{ b.address }}</p>{% endif %}
+    </div>
+  </a>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-shop"></i>Aún no hay negocios verificados en esta categoría.</div>
+  {% endfor %}
+</div>
+
+{% if businesses.has_other_pages %}
+<div class="pagination">
+  {% for num in businesses.paginator.page_range %}
+    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if active_type %}&tipo={{ active_type }}{% endif %}"><button class="{% if businesses.number == num %}active{% endif %}">{{ num }}</button></a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root { --primary: #0f7a3d; --primary-fg: #fff; }
+  #header { background: #06090a; color: #4CFF6E; border-bottom: 2px solid #4CFF6E; }
+  #header a:link, #header a:visited { color: #e9fff0; }
+  #branding h1 { color: #4CFF6E !important; font-weight: 700; }
+  div.breadcrumbs { background: #0f1815; color: #9db; }
+  .module h2, .module caption, .inline-group h2 { background: #0f7a3d; }
+  a:link, a:visited { color: #0f7a3d; }
+  .button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: #0f7a3d; color: #fff;
+  }
+  .button:hover, input[type=submit]:hover { background: #0a5c2d; }
+  .selector-chosen h2 { background: #0f7a3d; }
+</style>
+{% endblock %}
+
+{% block branding %}
+<div id="branding">
+  <h1 id="site-name">
+    <img src="{% static 'images/urbix-logo.jpg' %}" style="height:28px;width:28px;border-radius:6px;vertical-align:middle;margin-right:8px;">
+    URBIX · Panel de administración
+  </h1>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

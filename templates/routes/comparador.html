@@ -1,0 +1,42 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}Comparar rutas{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Elige hasta 3 rutas</span>{% endblock %}
+{% block page_title %}Comparador de rutas{% endblock %}
+
+{% block content %}
+<form method="get" class="glass" style="padding:18px;margin-bottom:22px;">
+  <div class="grid grid-3">
+    {% for r in all_routes %}
+    <label class="checkbox-row" style="background:var(--surface);padding:10px 12px;border-radius:10px;border:1px solid var(--border);">
+      <input type="checkbox" name="ruta" value="{{ r.pk }}" {% if r.pk in selected_ids %}checked{% endif %}>
+      <span class="route-color" style="background:{{ r.color }};width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+      {{ r.operator.name }} · {{ r.name }}
+    </label>
+    {% endfor %}
+  </div>
+  <button type="submit" class="btn btn-primary" style="margin-top:16px;"><i class="bi bi-bar-chart-steps"></i> Comparar</button>
+</form>
+
+{% if routes %}
+<div class="table-wrap glass" style="padding:16px;">
+  <table>
+    <thead><tr>
+      <th>Ruta</th>
+      {% for r in routes %}<th><span class="route-color" style="background:{{ r.color }};width:8px;height:8px;border-radius:50%;display:inline-block;"></span> {{ r.name }}</th>{% endfor %}
+    </tr></thead>
+    <tbody>
+      <tr><td>Empresa</td>{% for r in routes %}<td>{{ r.operator.name|default:"—" }}</td>{% endfor %}</tr>
+      <tr><td>Origen</td>{% for r in routes %}<td>{{ r.origin }}</td>{% endfor %}</tr>
+      <tr><td>Destino</td>{% for r in routes %}<td>{{ r.destination }}</td>{% endfor %}</tr>
+      <tr><td>Tiempo estimado</td>{% for r in routes %}<td>{{ r.duration_minutes }} min</td>{% endfor %}</tr>
+      <tr><td>Distancia</td>{% for r in routes %}<td>{{ r.distance_km }} km</td>{% endfor %}</tr>
+      <tr><td>Paraderos</td>{% for r in routes %}<td>{{ r.routestop_set.count }}</td>{% endfor %}</tr>
+      <tr><td>Calificación</td>{% for r in routes %}<td>{{ r|avg_rating }} ★</td>{% endfor %}</tr>
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state"><i class="bi bi-bar-chart-steps"></i>Selecciona 2 o 3 rutas para compararlas.</div>
+{% endif %}
+{% endblock %}

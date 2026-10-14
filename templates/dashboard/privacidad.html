@@ -1,0 +1,31 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Política de privacidad{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Tus datos, claros</span>{% endblock %}
+{% block page_title %}Política de privacidad{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:28px;max-width:760px;line-height:1.7;">
+  <p class="text-dim" style="font-size:.8rem;">Última actualización: {% now "d \d\e F \d\e Y" %}</p>
+
+  <h4>1. ¿Qué datos guardamos?</h4>
+  <p class="text-dim">Cuando creas una cuenta guardamos tu nombre, correo electrónico, teléfono (si lo agregas) y foto de perfil (si la subes). Cuando usas la app, guardamos tus favoritos, calificaciones, comentarios, historial de búsquedas y viajes planificados. Si usas el botón SOS, tus contactos de emergencia se guardan solo para que tú los uses — nunca los compartimos con terceros.</p>
+
+  <h4>2. ¿Para qué usamos tus datos?</h4>
+  <p class="text-dim">Para que la app funcione: mostrarte tus favoritos, recomendarte lugares según tus gustos, permitirte planificar viajes y responder a tus reseñas si eres un negocio. No vendemos tus datos a nadie.</p>
+
+  <h4>3. Ubicación</h4>
+  <p class="text-dim">Cuando usas "Mi ubicación" en el mapa, tu posición se usa solo en tu navegador para mostrarte buses cercanos — no queda guardada en nuestros servidores.</p>
+
+  <h4>4. ¿Con quién compartimos datos?</h4>
+  <p class="text-dim">Con nadie fuera de URBIX, excepto: (a) si usas el chatbot con IA, tu pregunta se envía a Anthropic (el proveedor de la inteligencia artificial) solo para generar la respuesta; (b) si compartes tu viaje con un contacto, ese enlace es visible para quien lo abra durante 4 horas.</p>
+
+  <h4>5. Tus derechos (Ley 1581 de 2012, Colombia)</h4>
+  <p class="text-dim">Puedes acceder, corregir o eliminar tus datos en cualquier momento desde tu Perfil, o escribiéndonos a <a href="mailto:soporte@urbix.co" class="text-neon">soporte@urbix.co</a>. Puedes eliminar tu cuenta y todos tus datos asociados cuando quieras.</p>
+
+  <h4>6. Seguridad</h4>
+  <p class="text-dim">Tu contraseña se guarda cifrada (nunca en texto plano). Usamos conexión segura (HTTPS) y protecciones contra accesos no autorizados. Aun así, ningún sistema es 100% infalible.</p>
+
+  <h4>7. Contacto</h4>
+  <p class="text-dim">¿Dudas sobre tus datos? Escríbenos a <a href="mailto:soporte@urbix.co" class="text-neon">soporte@urbix.co</a>.</p>
+</div>
+{% endblock %}

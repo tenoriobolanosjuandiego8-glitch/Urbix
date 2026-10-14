@@ -1,0 +1,40 @@
+{% extends "base_app.html" %}
+{% block page_title %}Reportes de conductores{% endblock %}
+{% block content %}
+<div class="tabs">
+  <a href="{% url 'reports:admin_list' %}" class="tab {% if not request.GET.status %}active{% endif %}">Todos</a>
+  <a href="?status=abierto" class="tab {% if request.GET.status == 'abierto' %}active{% endif %}">Abiertos</a>
+  <a href="?status=en_proceso" class="tab {% if request.GET.status == 'en_proceso' %}active{% endif %}">En proceso</a>
+  <a href="?status=resuelto" class="tab {% if request.GET.status == 'resuelto' %}active{% endif %}">Resueltos</a>
+</div>
+
+<div class="glass" style="padding:10px;overflow-x:auto;">
+  <table>
+    <thead><tr><th>Conductor</th><th>Tipo</th><th>Bus</th><th>Ruta</th><th>Descripción</th><th>Fecha</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for r in reports %}
+      <tr>
+        <td>{{ r.driver.get_full_name }}</td>
+        <td>{{ r.get_kind_display }}</td>
+        <td>{{ r.bus.code|default:"—" }}</td>
+        <td>{{ r.route.name|default:"—" }}</td>
+        <td style="max-width:260px;">{{ r.description|truncatechars:80 }}</td>
+        <td>{{ r.created_at|date:"d M Y H:i" }}</td>
+        <td>
+          <form method="post" action="{% url 'reports:update_status' r.pk %}" style="display:flex;gap:6px;">
+            {% csrf_token %}
+            <select name="status" onchange="this.form.submit()">
+              <option value="abierto" {% if r.status == 'abierto' %}selected{% endif %}>Abierto</option>
+              <option value="en_proceso" {% if r.status == 'en_proceso' %}selected{% endif %}>En proceso</option>
+              <option value="resuelto" {% if r.status == 'resuelto' %}selected{% endif %}>Resuelto</option>
+            </select>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7"><div class="empty-state"><i class="bi bi-inbox"></i>Sin reportes.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

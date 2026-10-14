@@ -1,0 +1,62 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Dashboard{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Panel administrador · Operado por {{ stats.operator }}</span>{% endblock %}
+{% block page_title %}Dashboard general{% endblock %}
+
+{% block content %}
+<div class="grid grid-4" style="margin-bottom:26px;">
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Usuarios registrados</span><div class="icon"><i class="bi bi-people"></i></div></div><div class="value">{{ stats.users_count }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Conductores</span><div class="icon"><i class="bi bi-person-badge"></i></div></div><div class="value">{{ stats.drivers_count }}</div><span class="trend up" style="font-size:.76rem;">{{ stats.drivers_active_now }} trabajando ahora</span></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Buses activos</span><div class="icon"><i class="bi bi-bus-front"></i></div></div><div class="value">{{ stats.buses_count }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Rutas activas</span><div class="icon"><i class="bi bi-signpost-split"></i></div></div><div class="value">{{ stats.routes_count }}</div></div>
+</div>
+
+<div class="grid" style="grid-template-columns:1.4fr 1fr;gap:22px;margin-bottom:26px;">
+  <div class="glass" style="padding:22px;">
+    <h4 style="margin:0 0 16px;">Reportes recientes</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Conductor</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for r in recent_reports %}
+          <tr><td>{{ r.driver.get_full_name }}</td><td>{{ r.get_kind_display }}</td>
+            <td><span class="status-dot {% if r.status == 'resuelto' %}ok{% elif r.status == 'en_proceso' %}warn{% else %}bad{% endif %}">{{ r.get_status_display }}</span></td>
+            <td>{{ r.created_at|timesince }}</td></tr>
+          {% empty %}<tr><td colspan="4"><div class="empty-state"><i class="bi bi-inbox"></i>Sin reportes recientes.</div></td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <a href="{% url 'reports:admin_list' %}" class="btn btn-ghost btn-sm" style="margin-top:14px;">Ver todos los reportes</a>
+  </div>
+  <div class="glass" style="padding:22px;">
+    <h4 style="margin:0 0 16px;">Estado de la flota</h4>
+    {% for s in fleet_status %}
+      <div class="settings-row" style="border:none;padding:8px 0;">
+        <span class="status-dot {% if s.status == 'en_ruta' %}ok{% elif s.status == 'retraso' %}warn{% else %}bad{% endif %}">{{ s.status }}</span><b>{{ s.total }}</b>
+      </div>
+    {% empty %}<p class="text-dim">Sin datos de flota.</p>{% endfor %}
+  </div>
+</div>
+
+<div class="glass" style="padding:22px;margin-bottom:26px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <h4 style="margin:0;">Conductores</h4>
+    <a href="{% url 'dashboard:admin_drivers' %}" class="btn btn-ghost btn-sm">Ver todos</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Conductor</th><th>Bus</th><th>Ruta</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for d in drivers %}
+        <tr><td>{{ d.user.get_full_name }}</td><td>{{ d.assigned_bus.code|default:"—" }}</td><td>{{ d.assigned_route.name|default:"—" }}</td><td>{{ d.get_status_display }}</td></tr>
+        {% empty %}<tr><td colspan="4"><div class="empty-state"><i class="bi bi-inbox"></i>Sin conductores registrados.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="glass" style="padding:22px;">
+  <h4 style="margin:0 0 14px;">Mapa general de la flota</h4>
+  <a href="{% url 'map:page' %}" class="btn btn-outline"><i class="bi bi-map"></i> Abrir mapa completo</a>
+</div>
+{% endblock %}

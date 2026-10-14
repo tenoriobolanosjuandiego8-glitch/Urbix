@@ -1,0 +1,46 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Buscador inteligente{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Impulsado por IA</span>{% endblock %}
+{% block page_title %}¿Qué estás buscando?{% endblock %}
+
+{% block content %}
+<form method="get" class="input-wrap" style="max-width:560px;margin-bottom:20px;">
+  <i class="bi bi-stars"></i>
+  <input type="search" name="q" value="{{ query }}" placeholder='Ej: "algo económico para comer cerca del centro"'>
+</form>
+
+{% if query %}
+  {% if explanation %}<p class="text-dim" style="margin-bottom:18px;"><i class="bi bi-stars text-neon"></i> {{ explanation }}</p>{% endif %}
+
+  <div class="grid grid-3">
+    {% for item in results %}
+    <div class="card">
+      {% if item.cover_image %}<img class="card-img" src="{{ item.cover_image.url }}">{% endif %}
+      <div class="card-body">
+        <h3 class="card-title">{{ item.name }}</h3>
+        {% if category == 'restaurantes' %}
+          <div class="card-meta"><span>{{ item.tag }}</span><span>{{ item.price_range }}</span></div>
+          <a href="{% url 'restaurants:detail' item.pk %}" class="btn btn-primary btn-sm">Ver más</a>
+        {% elif category == 'hoteles' %}
+          <div class="card-meta"><span class="text-neon">${{ item.approx_price|floatformat:0 }}</span></div>
+          <a href="{% url 'hotels:detail' item.pk %}" class="btn btn-primary btn-sm">Ver más</a>
+        {% elif category == 'turismo' %}
+          <div class="card-meta"><span>{{ item.tag }}</span></div>
+          <a href="{% url 'tourism:detail' item.pk %}" class="btn btn-primary btn-sm">Ver más</a>
+        {% elif category == 'eventos' %}
+          <div class="card-meta"><span><i class="bi bi-calendar-event"></i> {{ item.start_at|date:"d M" }}</span></div>
+          <a href="{% url 'events:detail' item.pk %}" class="btn btn-primary btn-sm">Ver más</a>
+        {% elif category == 'rutas' %}
+          <div class="card-meta"><span>{{ item.origin }} - {{ item.destination }}</span></div>
+          <a href="{% url 'map:page' %}" class="btn btn-primary btn-sm">Ver en mapa</a>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state"><i class="bi bi-emoji-frown"></i>No encontramos resultados para eso.</div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state"><i class="bi bi-stars"></i>Escribe lo que buscas y la IA te mostrará los mejores resultados.</div>
+{% endif %}
+{% endblock %}

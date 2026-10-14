@@ -1,0 +1,29 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Registrar negocio{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Centro Empresarial URBIX</span>{% endblock %}
+{% block page_title %}Registra tu negocio{% endblock %}
+
+{% block content %}
+{% if existing %}
+<div class="glass" style="padding:16px;max-width:640px;margin-bottom:20px;">
+  <p class="text-dim" style="font-size:.85rem;margin:0;"><i class="bi bi-info-circle"></i> Ya tienes negocios registrados. <a href="{% url 'business:dashboard' %}" class="text-neon">Ir a tu panel</a></p>
+</div>
+{% endif %}
+
+<div class="glass" style="padding:26px;max-width:640px;">
+  <p class="text-dim" style="font-size:.85rem;margin-bottom:18px;">
+    <i class="bi bi-shield-check"></i> Tu negocio quedará en estado <b>"Pendiente de verificación"</b> hasta que nuestro equipo revise la información. Una vez aprobado, aparecerá públicamente en URBIX.
+  </p>
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field">
+        <label>{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% for error in field.errors %}<p style="color:var(--danger);font-size:.78rem;margin-top:4px;">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-shop"></i> Registrar negocio</button>
+  </form>
+</div>
+{% endblock %}

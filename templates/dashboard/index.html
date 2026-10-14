@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}URBIX · Movilidad Inteligente en Popayán{% endblock %}
+{% block body %}
+<div class="hero-inicio">
+  <div class="logo-shine-wrap animate__animated animate__fadeInDown" style="border-radius:28px;">
+    <img src="{% static 'images/urbix-logo.jpg' %}" class="hero-bus-outline" alt="URBIX" style="border-radius:28px;">
+  </div>
+  <div data-aos="fade-up" data-aos-delay="150">
+    <h1 class="display" style="font-size:2.6rem;margin-top:10px;">UR<span class="text-neon">BIX</span></h1>
+    <p class="text-dim" style="max-width:360px;margin:0 auto 8px;">Movilidad Inteligente en Popayán</p>
+    <p class="text-dim" style="max-width:400px;margin:0 auto;font-size:.88rem;">Planifica tus desplazamientos, explora lugares de interés y accede a información útil de la ciudad blanca, en tiempo real.</p>
+  </div>
+  <div data-aos="fade-up" data-aos-delay="300" style="margin-top:38px;display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;">
+    <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-block"><i class="bi bi-box-arrow-in-right"></i> Iniciar sesión</a>
+    <a href="{% url 'accounts:register' %}" class="btn btn-ghost btn-block"><i class="bi bi-person-plus"></i> Crear cuenta</a>
+  </div>
+  <div class="progress-dots" data-aos="fade-up" data-aos-delay="400"><span class="active"></span><span></span><span></span><span></span></div>
+  <p class="text-dim" style="font-size:.72rem;margin-top:26px;">© {% now "Y" %} URBIX — Ciudad Blanca, Popayán</p>
+</div>
+<script>document.addEventListener('DOMContentLoaded', () => AOS.init({ duration:700, once:true }));</script>
+{% endblock %}

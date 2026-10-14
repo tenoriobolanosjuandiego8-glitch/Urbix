@@ -1,0 +1,48 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}Hoteles{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Hospedaje</span>{% endblock %}
+{% block page_title %}Hoteles en Popayán{% endblock %}
+
+{% block content %}
+<form method="get" class="input-wrap" style="max-width:420px;margin-bottom:16px;">
+  <i class="bi bi-search"></i><input type="search" name="q" value="{{ query }}" placeholder="Buscar hotel...">
+</form>
+<div class="grid grid-3">
+  {% for h in hotels %}
+  <div class="card" data-aos="fade-up">
+    {% if h.cover_image %}<img class="card-img" src="{{ h.cover_image.url }}" alt="{{ h.name }}">
+    {% else %}<img class="card-img" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop" alt="{{ h.name }}">{% endif %}
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <h3 class="card-title">{{ h.name }}</h3>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'interactions:favorite_toggle' 'hotels' 'hotel' h.pk %}">{% csrf_token %}
+          <button class="btn btn-icon btn-ghost" type="submit"><i class="bi {% if user|is_favorite:h %}bi-heart-fill{% else %}bi-heart{% endif %}" style="{% if user|is_favorite:h %}color:var(--neon);{% endif %}"></i></button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="card-meta"><span class="rating"><i class="bi bi-star-fill"></i> {{ h|avg_rating }}</span><span class="text-neon">${{ h.approx_price|floatformat:0 }}</span></div>
+      <p class="text-dim" style="font-size:.85rem;">{{ h.address }}</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
+        {% for s in h.services_list %}<span class="badge">{{ s }}</span>{% endfor %}
+      </div>
+      <div class="card-actions">
+        <a class="btn btn-primary btn-sm" href="{% url 'hotels:detail' h.pk %}"><i class="bi bi-eye"></i> Ver más</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'map:page' %}"><i class="bi bi-signpost"></i> Cómo llegar</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-building"></i>No hay hoteles registrados.</div>
+  {% endfor %}
+</div>
+
+{% if hotels.has_other_pages %}
+<div class="pagination">
+  {% for num in hotels.paginator.page_range %}
+    <a href="?page={{ num }}"><button class="{% if hotels.number == num %}active{% endif %}">{{ num }}</button></a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

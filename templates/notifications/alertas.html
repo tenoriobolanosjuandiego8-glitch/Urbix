@@ -1,0 +1,86 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Mis alertas{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Notificaciones personalizadas</span>{% endblock %}
+{% block page_title %}Configura tus alertas{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns: 1.5fr 1fr; gap: 22px; align-items: start;">
+  <div>
+    <div class="glass" style="padding: 22px; margin-bottom: 20px;">
+      <h4>Crear nueva alerta</h4>
+      <form id="formAlerta" style="display: flex; flex-direction: column; gap: 12px;">
+        {% csrf_token %}
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-dim); display: block; margin-bottom: 4px;">Parada</label>
+          <select name="parada" required style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);">
+            <option value="">Selecciona una parada...</option>
+            {% for parada in paradas %}
+            <option value="{{ parada.id }}">{{ parada.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-dim); display: block; margin-bottom: 4px;">Ruta (opcional)</label>
+          <select name="ruta" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);">
+            <option value="">Todas las rutas</option>
+            {% for ruta in rutas %}
+            <option value="{{ ruta.id }}">{{ ruta.name }} ({{ ruta.operator.name }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-dim); display: block; margin-bottom: 4px;">Tipo de alerta</label>
+          <select name="tipo" required style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);">
+            <option value="llegada_bus">Cuando llega el bus</option>
+            <option value="congestión">Cuando hay congestión</option>
+            <option value="retraso">Si hay retraso</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="bi bi-bell"></i> Crear alerta</button>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <div class="glass" style="padding: 22px;">
+      <h4 style="margin-bottom: 14px;"><i class="bi bi-bell-fill"></i> Mis alertas activas</h4>
+      {% if alertas %}
+        {% for alerta in alertas %}
+        <div class="card" style="margin-bottom: 10px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+              <p style="margin: 0; font-weight: 600;">{{ alerta.parada.name }}</p>
+              <p style="margin: 2px 0; font-size: 0.8rem; color: var(--text-dim);">{{ alerta.get_tipo_display }}</p>
+              {% if alerta.ruta %}<p style="margin: 2px 0; font-size: 0.8rem; color: var(--neon);">{{ alerta.ruta.name }}</p>{% endif %}
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="desactivarAlerta({{ alerta.id }})"><i class="bi bi-x"></i></button>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-dim">No tienes alertas configuradas aún.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('formAlerta').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const res = await fetch('{% url "notifications:crear_alerta" %}', {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await res.json();
+  if (data.ok) {
+    location.reload();
+  }
+});
+
+async function desactivarAlerta(id) {
+  const res = await fetch(`/notificaciones/alertas/${id}/desactivar/`, { method: 'POST' });
+  if (res.ok) location.reload();
+}
+</script>
+{% endblock %}

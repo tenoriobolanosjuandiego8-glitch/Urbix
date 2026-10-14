@@ -1,0 +1,55 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Centro Empresarial · Admin{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Verificación de negocios</span>{% endblock %}
+{% block page_title %}Centro Empresarial{% endblock %}
+
+{% block content %}
+<div class="tabs">
+  <a href="?" class="tab {% if not status_filter %}active{% endif %}">Todos</a>
+  {% for value, label in statuses %}
+    <a href="?estado={{ value }}" class="tab {% if status_filter == value %}active{% endif %}">
+      {{ label }}{% if value == 'pendiente' and pending_count %} ({{ pending_count }}){% endif %}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="glass" style="padding:10px;overflow-x:auto;">
+  <table>
+    <thead><tr><th>Negocio</th><th>Tipo</th><th>Dueño</th><th>Estado</th><th>Plan</th><th>Acciones</th></tr></thead>
+    <tbody>
+      {% for b in businesses %}
+      <tr>
+        <td><a href="{% url 'business:detail' b.pk %}" class="text-neon">{{ b.name }}</a></td>
+        <td>{{ b.get_business_type_display }}</td>
+        <td>{{ b.owner.email }}</td>
+        <td>
+          <span class="status-dot {% if b.status == 'aprobado' %}ok{% elif b.status == 'pendiente' %}warn{% else %}bad{% endif %}">{{ b.get_status_display }}</span>
+        </td>
+        <td>{{ b.get_plan_display }}</td>
+        <td style="white-space:nowrap;">
+          {% if b.status == 'pendiente' %}
+            <form method="post" action="{% url 'business:approve' b.pk %}" style="display:inline;">{% csrf_token %}<button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-check2"></i> Aprobar</button></form>
+            <a href="{% url 'business:reject' b.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-x"></i> Rechazar</a>
+          {% elif b.status == 'aprobado' %}
+            <form method="post" action="{% url 'business:suspend' b.pk %}" style="display:inline;">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-pause"></i> Suspender</button></form>
+          {% elif b.status == 'suspendido' %}
+            <form method="post" action="{% url 'business:suspend' b.pk %}" style="display:inline;">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit"><i class="bi bi-play"></i> Reactivar</button></form>
+          {% endif %}
+          <form method="post" action="{% url 'business:set_plan' b.pk %}" style="display:inline-flex;gap:4px;margin-left:6px;">
+            {% csrf_token %}
+            <select name="plan" style="padding:6px;font-size:.78rem;">
+              <option value="gratuito">Gratuito</option>
+              <option value="destacado">Destacado</option>
+              <option value="premium">Premium</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" type="submit" title="Asignar plan (30 días)"><i class="bi bi-award"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6"><div class="empty-state"><i class="bi bi-shop"></i>Sin negocios registrados.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

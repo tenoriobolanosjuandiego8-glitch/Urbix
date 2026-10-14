@@ -1,0 +1,37 @@
+{% extends "base_app.html" %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_head_actions %}
+{% if create_url %}<a href="{{ create_url }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nuevo</a>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="glass" style="padding:10px;overflow-x:auto;">
+  <table>
+    <thead><tr>
+      {% for h in headers %}<th>{{ h }}</th>{% endfor %}
+      <th>Acciones</th>
+    </tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        {% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}
+        <td style="white-space:nowrap;">
+          {% if row.toggle_url %}
+            <form method="post" action="{{ row.toggle_url }}" style="display:inline;">{% csrf_token %}
+              <button class="btn btn-ghost btn-sm" type="submit" title="Activar/Desactivar"><i class="bi bi-power"></i></button>
+            </form>
+          {% endif %}
+          {% if row.edit_url %}<a href="{{ row.edit_url }}" class="btn btn-ghost btn-sm"><i class="bi bi-pencil"></i></a>{% endif %}
+          {% if row.delete_url %}
+            <form method="post" action="{{ row.delete_url }}" style="display:inline;" onsubmit="return confirm('¿Eliminar este registro?');">{% csrf_token %}
+              <button class="btn btn-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="{{ headers|length|add:1 }}"><div class="empty-state"><i class="bi bi-inbox"></i>Sin registros todavía.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% if user.is_authenticated %}
+<nav class="bottom-nav">
+  {% if user.role == 'administrador' or user.is_superuser %}
+    <a href="{% url 'dashboard:admin' %}" class="{% if request.resolver_match.url_name == 'admin' %}active{% endif %}"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+    <a href="{% url 'buses:admin_list' %}" class="{% if request.resolver_match.app_name == 'buses' %}active{% endif %}"><i class="bi bi-bus-front"></i>Buses</a>
+    <a href="{% url 'routes:admin_list' %}" class="{% if request.resolver_match.app_name == 'routes' %}active{% endif %}"><i class="bi bi-signpost-split"></i>Rutas</a>
+    <a href="{% url 'reports:admin_list' %}" class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}"><i class="bi bi-flag"></i>Reportes</a>
+    <a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person"></i>Perfil</a>
+  {% elif user.role == 'conductor' %}
+    <a href="{% url 'map:conductor' %}" class="{% if request.resolver_match.url_name == 'conductor' %}active{% endif %}"><i class="bi bi-map"></i>Mi mapa</a>
+    <a href="{% url 'dashboard:driver' %}" class="{% if request.resolver_match.url_name == 'driver' %}active{% endif %}"><i class="bi bi-signpost-split"></i>Mi ruta</a>
+    <a href="{% url 'reports:create' %}" class="{% if request.resolver_match.url_name == 'create' and request.resolver_match.app_name == 'reports' %}active{% endif %}"><i class="bi bi-flag"></i>Reportar</a>
+    <a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person"></i>Perfil</a>
+  {% else %}
+    <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="bi bi-house-door"></i>Inicio</a>
+    <a href="{% url 'map:page' %}" class="{% if request.resolver_match.app_name == 'map' %}active{% endif %}"><i class="bi bi-map"></i>Mapa</a>
+    <a href="{% url 'assistant:search' %}" class="{% if request.resolver_match.app_name == 'assistant' %}active{% endif %}"><i class="bi bi-stars"></i>Buscar</a>
+    <a href="{% url 'interactions:favorite_list' %}" class="{% if request.resolver_match.url_name == 'favorite_list' %}active{% endif %}"><i class="bi bi-heart"></i>Favoritos</a>
+    <a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person"></i>Perfil</a>
+  {% endif %}
+</nav>
+{% endif %}

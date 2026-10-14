@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Página no encontrada · URBIX{% endblock %}
+{% block body %}
+<div class="hero-inicio">
+  <h1 class="display" style="font-size:6rem;color:var(--neon);text-shadow:0 0 40px var(--neon-glow);">404</h1>
+  <h2>Esta ruta no existe</h2>
+  <p class="text-dim" style="max-width:360px;">Parece que te desviaste del camino. Verifica la dirección o vuelve al inicio.</p>
+  <a href="{% url 'splash' %}" class="btn btn-primary" style="margin-top:20px;"><i class="bi bi-house-door"></i> Volver al inicio</a>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}{{ route.name }}{% endblock %}
+{% block eyebrow %}<span class="eyebrow">{{ route.operator.name|default:"URBIX" }}{% if route.code %} · {{ route.code }}{% endif %}</span>{% endblock %}
+{% block page_title %}{{ route.name }}{% endblock %}
+{% block page_head_actions %}
+{% if user.is_authenticated %}
+<form method="post" action="{% url 'interactions:favorite_toggle' 'routes' 'route' route.pk %}">
+  {% csrf_token %}
+  <button class="btn btn-ghost" type="submit">
+    <i class="bi {% if user|is_favorite:route %}bi-heart-fill{% else %}bi-heart{% endif %}" style="{% if user|is_favorite:route %}color:var(--neon);{% endif %}"></i>
+    {% if user|is_favorite:route %}Guardada{% else %}Guardar{% endif %}
+  </button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;">
+  <div>
+    <div class="glass" style="padding:24px;margin-bottom:20px;">
+      <span class="badge" style="background:{{ route.color }}22;color:{{ route.color }};border-color:{{ route.color }}55;">
+        <span class="route-color" style="background:{{ route.color }};display:inline-block;"></span> {{ route.origin }} → {{ route.destination }}
+      </span>
+      <div class="card-meta" style="margin-top:16px;">
+        <span><i class="bi bi-clock"></i> {{ route.duration_minutes }} min aprox.</span>
+        <span><i class="bi bi-signpost"></i> {{ route.distance_km }} km</span>
+        <span><i class="bi bi-geo-alt"></i> {{ stops|length }} paraderos</span>
+      </div>
+      {% if route.operator %}
+        <a href="{% url 'routes:operator_detail' route.operator.pk %}" class="btn btn-ghost btn-sm" style="margin-top:14px;">
+          <i class="bi bi-bus-front"></i> Ver todas las rutas de {{ route.operator.name }}
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="glass" style="padding:24px;">
+      <h4 style="margin:0 0 14px;">Recorrido (barrios y lugares por donde pasa)</h4>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        {% for rs in stops %}
+        <a href="{% url 'routes:stop_detail' rs.stop.pk %}" style="display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;text-decoration:none;color:inherit;" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
+          <span style="width:26px;height:26px;border-radius:50%;background:{{ route.color }}22;color:{{ route.color }};display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;">{{ forloop.counter }}</span>
+          <div>
+            <b style="font-size:.88rem;">{{ rs.stop.name }}</b>
+            <span class="text-dim" style="font-size:.74rem;"> · {{ rs.stop.get_category_display }}</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h4 style="margin:0 0 10px;">Horarios</h4>
+      <a href="{% url 'routes:schedules' %}?ruta={{ route.pk }}" class="btn btn-outline btn-block"><i class="bi bi-clock-history"></i> Ver horarios completos</a>
+    </div>
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h4 style="margin:0 0 10px;">En el mapa</h4>
+      <a href="{% url 'map:page' %}" class="btn btn-primary btn-block"><i class="bi bi-map"></i> Ver bus en tiempo real</a>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h4 style="margin:0 0 10px;">Califica esta ruta</h4>
+      <form method="post" action="{% url 'interactions:rate_object' 'routes' 'route' route.pk %}" class="star-rate">
+        {% csrf_token %}
+        {% for i in "12345" %}<button type="submit" name="score" value="{{ i }}" class="btn btn-ghost btn-icon"><i class="bi bi-star"></i></button>{% endfor %}
+      </form>
+      <p class="text-dim" style="font-size:.8rem;margin-top:6px;">Promedio actual: {{ route|avg_rating }} ★</p>
+    </div>
+    {% endif %}
+    <div class="glass" style="padding:20px;">
+      <h4 style="margin:0 0 10px;">Compartir esta ruta</h4>
+      <button class="btn btn-outline btn-block" id="shareRouteBtn" data-url="{{ request.build_absolute_uri }}"><i class="bi bi-share"></i> Compartir enlace</button>
+      <button class="btn btn-ghost btn-block" id="qrRouteBtn" style="margin-top:8px;"><i class="bi bi-qr-code"></i> Ver código QR</button>
+      <div id="qrRouteBox" style="display:none;margin-top:12px;text-align:center;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+document.getElementById('shareRouteBtn')?.addEventListener('click', async function(){
+  const url = this.dataset.url;
+  if(navigator.share){
+    navigator.share({ title: document.title, url }).catch(()=>{});
+  } else {
+    await navigator.clipboard.writeText(url);
+    Components.toast('Enlace copiado al portapapeles');
+  }
+});
+document.getElementById('qrRouteBtn')?.addEventListener('click', function(){
+  const box = document.getElementById('qrRouteBox');
+  if(box.style.display === 'none'){
+    box.style.display = 'block';
+    if(!box.dataset.rendered){
+      QRCode.toCanvas(document.createElement('canvas'), window.location.href, { width: 180, color:{ dark:'#0a1f12', light:'#ffffff' } }, (err, canvas) => {
+        if(!err) box.appendChild(canvas);
+      });
+      box.dataset.rendered = '1';
+    }
+  } else {
+    box.style.display = 'none';
+  }
+});
+</script>
+{% endblock %}

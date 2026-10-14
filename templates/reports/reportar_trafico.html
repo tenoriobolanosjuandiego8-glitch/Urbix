@@ -1,0 +1,100 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Reportar tráfico{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Ayuda a otros conductores</span>{% endblock %}
+{% block page_title %}¿Qué está pasando?{% endblock %}
+
+{% block content %}
+{% if user.role == 'conductor' %}
+<div class="glass" style="padding: 22px; max-width: 500px; margin: 0 auto;">
+  <form id="formReporteTrafico">
+    {% csrf_token %}
+    
+    <div style="margin-bottom: 16px;">
+      <label style="font-weight: 600; display: block; margin-bottom: 8px;">Tipo de reporte</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <input type="radio" name="tipo" value="congestión" checked>
+          <span>🚗 Congestión</span>
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <input type="radio" name="tipo" value="accidente">
+          <span>⚠️ Accidente</span>
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <input type="radio" name="tipo" value="evento">
+          <span>🚧 Evento/Cierre</span>
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <input type="radio" name="tipo" value="otro">
+          <span>❓ Otro</span>
+        </label>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="font-weight: 600; display: block; margin-bottom: 8px;">Nivel de severidad</label>
+      <select name="nivel" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);">
+        <option value="bajo">🟢 Bajo - Todo fluye</option>
+        <option value="medio" selected>🟡 Medio - Algo lento</option>
+        <option value="alto">🔴 Alto - Muy congestionado</option>
+        <option value="caótico">⛔ Caótico - Cierre total</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="font-weight: 600; display: block; margin-bottom: 8px;">Descripción (opcional)</label>
+      <textarea name="descripcion" placeholder="Ej: Calle 5 con Carrera 8, accidente con 2 autos" style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); resize: none;"></textarea>
+    </div>
+
+    <div style="background: rgba(76,255,110,.1); border-left: 3px solid var(--neon); padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 0.9rem;">
+      <i class="bi bi-info-circle"></i> Tu ubicación se enviará automáticamente. El reporte expira en 30 minutos.
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-send"></i> Enviar reporte</button>
+  </form>
+</div>
+
+<script>
+document.getElementById('formReporteTrafico').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  
+  // Obtener ubicación
+  if (!navigator.geolocation) {
+    alert('Tu navegador no soporta geolocalización');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const data = {
+      tipo: formData.get('tipo'),
+      nivel: formData.get('nivel'),
+      descripcion: formData.get('descripcion'),
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+    };
+
+    const res = await fetch('{% url "reports:crear_trafico" %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+    if (result.ok) {
+      alert('✓ Reporte enviado. Gracias por ayudar a otros conductores.');
+      e.target.reset();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  }, (err) => {
+    alert('Error al obtener tu ubicación: ' + err.message);
+  });
+});
+</script>
+
+{% else %}
+<div class="empty-state"><i class="bi bi-exclamation-circle"></i> Solo los conductores pueden reportar tráfico.</div>
+{% endif %}
+{% endblock %}

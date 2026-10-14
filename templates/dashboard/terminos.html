@@ -1,0 +1,34 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Términos de uso{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Reglas claras</span>{% endblock %}
+{% block page_title %}Términos y condiciones de uso{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:28px;max-width:760px;line-height:1.7;">
+  <p class="text-dim" style="font-size:.8rem;">Última actualización: {% now "d \d\e F \d\e Y" %}</p>
+
+  <h4>1. Qué es URBIX</h4>
+  <p class="text-dim">URBIX es una plataforma de movilidad e información local para Popayán. Muestra rutas de transporte urbano, horarios estimados, negocios locales y contenido turístico. La información de buses en tiempo real puede ser simulada mientras no haya GPS real conectado — siempre lo indicamos claramente en la app.</p>
+
+  <h4>2. Uso de la cuenta</h4>
+  <p class="text-dim">Eres responsable de mantener tu contraseña segura y de la actividad que ocurra en tu cuenta. No compartas tu cuenta con terceros. Debes dar información veraz al registrarte.</p>
+
+  <h4>3. Negocios registrados (Centro Empresarial)</h4>
+  <p class="text-dim">Si registras un negocio, tu perfil queda pendiente de verificación antes de publicarse. URBIX puede rechazar o suspender un negocio que incumpla estas normas o dé información falsa. Los planes Destacado y Premium ofrecen mayor visibilidad, no garantizan resultados de ventas.</p>
+
+  <h4>4. Contenido generado por usuarios</h4>
+  <p class="text-dim">Al comentar o calificar, te comprometes a no publicar contenido ofensivo, falso o spam. Nos reservamos el derecho de eliminar contenido denunciado que incumpla esto.</p>
+
+  <h4>5. Límites de responsabilidad</h4>
+  <p class="text-dim">Los tiempos de llegada, horarios y disponibilidad son estimados y pueden no coincidir con la realidad (tráfico, desvíos, imprevistos). URBIX no se hace responsable por decisiones tomadas basadas únicamente en esta información — verifica siempre con el conductor o la empresa cuando sea posible.</p>
+
+  <h4>6. Botón SOS</h4>
+  <p class="text-dim">El botón SOS es una herramienta de conveniencia que envía tu ubicación a un contacto tuyo por WhatsApp. No es un servicio de emergencias oficial — en una emergencia real, contacta primero a las autoridades (Policía 123, Línea de emergencias 123).</p>
+
+  <h4>7. Cambios a estos términos</h4>
+  <p class="text-dim">Podemos actualizar estos términos; te avisaremos de cambios importantes dentro de la app.</p>
+
+  <h4>8. Contacto</h4>
+  <p class="text-dim">Preguntas: <a href="mailto:soporte@urbix.co" class="text-neon">soporte@urbix.co</a></p>
+</div>
+{% endblock %}

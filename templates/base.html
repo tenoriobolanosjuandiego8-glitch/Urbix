@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}URBIX · Movilidad Inteligente en Popayán{% endblock %}</title>
+<link rel="icon" href="{% static 'images/urbix-logo.jpg' %}">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+{% block extra_head %}{% endblock %}
+</head>
+<body{% block body_attrs %}{% endblock %}>
+
+{% if messages %}
+<div class="toast-stack" id="djangoMessages">
+  {% for message in messages %}
+    <div class="toast glass {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+      <i class="bi {% if message.tags == 'error' %}bi-x-circle-fill{% else %}bi-check-circle-fill{% endif %}"
+         style="color:{% if message.tags == 'error' %}var(--danger){% else %}var(--neon){% endif %}"></i>
+      <span>{{ message }}</span>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block body %}{% endblock %}
+
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="{% static 'js/components.js' %}"></script>
+<script src="{% static 'js/command-palette.js' %}"></script>
+<script src="{% static 'js/onboarding-tour.js' %}"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+<script>
+  setTimeout(() => document.querySelectorAll('#djangoMessages .toast').forEach((el,i) => {
+    setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),250); }, 3200 + i*200);
+  }), 300);
+</script>
+</body>
+</html>

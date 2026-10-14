@@ -1,0 +1,92 @@
+{% load static %}
+{% if user.is_authenticated %}
+<style>
+  #urbixChatBtn{
+    position:fixed; bottom:24px; right:24px; z-index:150;
+    width:58px; height:58px; border-radius:50%;
+    background: linear-gradient(135deg, var(--neon), var(--neon-2));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 6px 24px var(--neon-glow); border:none; cursor:pointer;
+    font-size:1.4rem; color:#04150a;
+  }
+  #urbixChatPanel{
+    position:fixed; bottom:92px; right:24px; z-index:150;
+    width:340px; max-width:90vw; height:460px; max-height:70vh;
+    display:none; flex-direction:column; overflow:hidden; padding:0;
+  }
+  #urbixChatPanel.open{ display:flex; animation: popIn .2s ease; }
+  #urbixChatHead{ padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  #urbixChatBody{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .chat-bubble{ max-width:85%; padding:10px 13px; border-radius:14px; font-size:.85rem; line-height:1.4; }
+  .chat-bubble.user{ align-self:flex-end; background:linear-gradient(135deg,var(--neon),var(--neon-2)); color:#04150a; }
+  .chat-bubble.assistant{ align-self:flex-start; background:var(--surface-strong); border:1px solid var(--border); color:var(--text-hi); }
+  #urbixChatForm{ display:flex; gap:8px; padding:12px; border-top:1px solid var(--border); }
+  #urbixChatForm input{ flex:1; }
+</style>
+
+<button id="urbixChatBtn" title="Asistente URBIX"><i class="bi bi-chat-dots-fill"></i></button>
+
+<div id="urbixChatPanel" class="glass">
+  <div id="urbixChatHead">
+    <img src="{% static 'images/urbix-logo.jpg' %}" style="width:28px;height:28px;border-radius:8px;">
+    <div><b style="font-size:.88rem;">Asistente URBIX</b><br><span class="text-dim" style="font-size:.72rem;">Rutas, lugares y más</span></div>
+    <button class="btn btn-icon btn-ghost btn-sm" style="margin-left:auto;" onclick="document.getElementById('urbixChatPanel').classList.remove('open')"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div id="urbixChatBody">
+    <div class="chat-bubble assistant">¡Hola! Soy el asistente de URBIX. Pregúntame sobre rutas, horarios, restaurantes, hoteles o eventos en Popayán.</div>
+  </div>
+  <form id="urbixChatForm">
+    <input type="text" id="urbixChatInput" placeholder="Escribe tu pregunta..." autocomplete="off">
+    <button type="submit" class="btn btn-primary btn-icon"><i class="bi bi-send"></i></button>
+  </form>
+</div>
+
+<script>
+(function(){
+  const btn = document.getElementById('urbixChatBtn');
+  const panel = document.getElementById('urbixChatPanel');
+  const body = document.getElementById('urbixChatBody');
+  const form = document.getElementById('urbixChatForm');
+  const input = document.getElementById('urbixChatInput');
+
+  btn.addEventListener('click', () => panel.classList.toggle('open'));
+
+  function addBubble(text, role){
+    const div = document.createElement('div');
+    div.className = 'chat-bubble ' + role;
+    div.textContent = text;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function getCookie(name){
+    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return match ? match.pop() : '';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if(!message) return;
+    addBubble(message, 'user');
+    input.value = '';
+    addBubble('Escribiendo…', 'assistant');
+    const thinking = body.lastChild;
+
+    try {
+      const res = await fetch("{% url 'assistant:chat_api' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json();
+      thinking.remove();
+      addBubble(data.reply || data.error || 'No hubo respuesta.', 'assistant');
+    } catch(err){
+      thinking.remove();
+      addBubble('Error de conexión. Intenta de nuevo.', 'assistant');
+    }
+  });
+})();
+</script>
+{% endif %}

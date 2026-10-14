@@ -1,0 +1,36 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Ayuda{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Centro de ayuda</span>{% endblock %}
+{% block page_title %}Preguntas frecuentes{% endblock %}
+
+{% block extra_head %}
+<style>
+  .faq-item{ border-bottom:1px solid var(--border); }
+  .faq-q{ display:flex; justify-content:space-between; align-items:center; padding:18px 4px; cursor:pointer; font-weight:600; color:var(--text-hi); }
+  .faq-a{ max-height:0; overflow:hidden; transition: max-height .3s ease; color:var(--text-dim); font-size:.9rem; }
+  .faq-item.open .faq-a{ max-height:220px; padding-bottom:16px; }
+  .faq-item.open .faq-q i{ transform:rotate(45deg); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:10px 24px;max-width:760px;">
+  <div class="faq-item open"><div class="faq-q">¿Cómo veo mi bus en tiempo real? <i class="bi bi-plus-lg"></i></div><div class="faq-a">Ve a Mapa y selecciona tu ruta; verás el bus moverse junto con su tiempo estimado de llegada.</div></div>
+  <div class="faq-item"><div class="faq-q">¿Cómo uso el planificador de viaje? <i class="bi bi-plus-lg"></i></div><div class="faq-a">En Planificar viaje, elige tu paradero de origen y destino; el sistema te muestra la ruta directa o con transbordo más rápida.</div></div>
+  <div class="faq-item"><div class="faq-q">¿Cómo guardo un lugar en favoritos? <i class="bi bi-plus-lg"></i></div><div class="faq-a">Toca el ícono de corazón en cualquier tarjeta de restaurante, hotel, ruta o paradero.</div></div>
+  <div class="faq-item"><div class="faq-q">¿Qué hace el botón SOS? <i class="bi bi-plus-lg"></i></div><div class="faq-a">Envía tu ubicación actual por WhatsApp a un contacto de emergencia que hayas guardado en tu perfil.</div></div>
+  <div class="faq-item"><div class="faq-q">¿Cómo reporto un problema con una ruta? <i class="bi bi-plus-lg"></i></div><div class="faq-a">Si eres conductor, usa la sección Reportes de tu panel. Si eres usuario, puedes calificar y comentar cualquier ruta o empresa.</div></div>
+  <div class="faq-item"><div class="faq-q">¿Cómo cambio el tema de la app? <i class="bi bi-plus-lg"></i></div><div class="faq-a">Usa el botón de sol/luna en la barra superior — alterna entre modo oscuro, claro y AMOLED (negro puro).</div></div>
+</div>
+
+<div class="glass" style="padding:24px;max-width:760px;margin-top:20px;text-align:center;">
+  <i class="bi bi-headset text-neon" style="font-size:1.8rem;"></i>
+  <h4>¿No encontraste lo que buscabas?</h4>
+  <a href="mailto:soporte@urbix.co" class="btn btn-primary"><i class="bi bi-envelope"></i> Escríbenos</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script>document.querySelectorAll('.faq-q').forEach(q => q.addEventListener('click', () => q.parentElement.classList.toggle('open')));</script>
+{% endblock %}

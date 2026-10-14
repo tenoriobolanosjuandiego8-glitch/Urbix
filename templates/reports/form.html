@@ -1,0 +1,12 @@
+{% extends "base_app.html" %}
+{% block page_title %}Reportar novedad{% endblock %}
+{% block content %}
+<div class="glass" style="padding:24px;max-width:520px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="field"><label>Tipo de novedad</label>{{ form.kind }}</div>
+    <div class="field"><label>Descripción</label>{{ form.description }}</div>
+    <button type="submit" class="btn btn-outline btn-block"><i class="bi bi-flag"></i> Enviar reporte</button>
+  </form>
+</div>
+{% endblock %}

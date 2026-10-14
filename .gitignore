@@ -1,0 +1,31 @@
+
+# Configuración local (NUNCA SUBIR A GITHUB)
+.env
+.env.local
+.env.*.local
+
+# Entorno y archivos generados
+venv/
+staticfiles/
+media/
+logs/
+node_modules/
+
+# Secretos
+db.sqlite3
+*.db
+
+# Caché
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db

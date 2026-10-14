@@ -1,0 +1,40 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Contactos de emergencia{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Seguridad</span>{% endblock %}
+{% block page_title %}Contactos de emergencia{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1fr 1.2fr;gap:22px;">
+  <div class="glass" style="padding:24px;">
+    <h4 style="margin:0 0 14px;">Agregar contacto</h4>
+    <form method="post">
+      {% csrf_token %}
+      <div class="field"><label>Nombre</label><input type="text" name="name" required></div>
+      <div class="field"><label>Teléfono (con indicativo, ej. 57...)</label><input type="tel" name="phone" placeholder="573001234567" required></div>
+      <div class="field"><label>Relación</label><input type="text" name="relationship" placeholder="Mamá, pareja, amigo..."></div>
+      <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-person-plus"></i> Agregar</button>
+    </form>
+  </div>
+
+  <div>
+    <h4 style="margin:0 0 14px;">Tus contactos</h4>
+    {% for c in contacts %}
+    <div class="glass" style="padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <b>{{ c.name }}</b><br>
+        <span class="text-dim" style="font-size:.82rem;">{{ c.phone }}{% if c.relationship %} · {{ c.relationship }}{% endif %}</span>
+      </div>
+      <form method="post" action="{% url 'accounts:emergency_contact_delete' c.pk %}" onsubmit="return confirm('¿Eliminar este contacto?');">
+        {% csrf_token %}
+        <button class="btn btn-ghost btn-icon" type="submit"><i class="bi bi-trash"></i></button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="empty-state"><i class="bi bi-person-x"></i>Aún no has agregado contactos de emergencia.</div>
+    {% endfor %}
+    {% if contacts %}
+    <a href="{% url 'accounts:sos' %}" class="btn btn-danger btn-block" style="margin-top:10px;"><i class="bi bi-exclamation-triangle-fill"></i> Ir al botón SOS</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

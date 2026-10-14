@@ -1,0 +1,142 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block navbar_title %}Panel Admin{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Dashboard operacional</span>{% endblock %}
+{% block page_title %}Estado del sistema en tiempo real{% endblock %}
+
+{% block content %}
+<div class="grid grid-4" style="margin-bottom: 28px;">
+  <div class="card">
+    <div class="card-body">
+      <span class="badge" style="background: rgba(76,255,110,.1); color: var(--neon);">Buses</span>
+      <h2 style="margin: 8px 0; font-size: 2.5rem;">{{ stats.buses_en_ruta }}</h2>
+      <p class="text-dim" style="margin: 0;">En ruta ahora</p>
+      <p class="text-dim" style="font-size: 0.8rem; margin: 4px 0;">{{ stats.buses_total }} total</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <span class="badge" style="background: rgba(255,165,0,.1); color: #FFA500;">Retraso</span>
+      <h2 style="margin: 8px 0; font-size: 2.5rem;">{{ stats.buses_con_retraso }}</h2>
+      <p class="text-dim" style="margin: 0;">Buses retrasados</p>
+      <p class="text-dim" style="font-size: 0.8rem; margin: 4px 0;">⚠️ Revisar</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <span class="badge" style="background: rgba(255,100,100,.1); color: #FF6464;">Reportes</span>
+      <h2 style="margin: 8px 0; font-size: 2.5rem;">{{ stats.reportes_trafico_activos }}</h2>
+      <p class="text-dim" style="margin: 0;">Reportes activos</p>
+      <p class="text-dim" style="font-size: 0.8rem; margin: 4px 0;">últimos 30 min</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <span class="badge" style="background: rgba(100,200,255,.1); color: #64C8FF;">Rutas</span>
+      <h2 style="margin: 8px 0; font-size: 2.5rem;">{{ stats.rutas_activas }}</h2>
+      <p class="text-dim" style="margin: 0;">Rutas activas</p>
+      <p class="text-dim" style="font-size: 0.8rem; margin: 4px 0;">Operando hoy</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid" style="grid-template-columns: 1.5fr 1fr; gap: 22px; align-items: start; margin-bottom: 28px;">
+  <div class="glass" style="padding: 22px;">
+    <h4><i class="bi bi-bus-front"></i> Buses en ruta (últimos 10)</h4>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; font-size: 0.85rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <th style="text-align: left; padding: 8px;">Bus</th>
+            <th style="text-align: left; padding: 8px;">Ruta</th>
+            <th style="text-align: left; padding: 8px;">Conductor</th>
+            <th style="text-align: left; padding: 8px;">Velocidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bus in buses_en_ruta %}
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 8px;"><b>#{{ bus.code }}</b></td>
+            <td style="padding: 8px; color: var(--neon);">{{ bus.route__name }}</td>
+            <td style="padding: 8px; color: var(--text-dim);">{{ bus.current_driver__user__first_name|default:"—" }}</td>
+            <td style="padding: 8px;"><i class="bi bi-speedometer2"></i> {{ bus.last_speed_kmh|floatformat:0 }} km/h</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" style="padding: 12px; text-align: center; color: var(--text-dim);">Sin buses en ruta ahora</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <div class="glass" style="padding: 22px; margin-bottom: 18px;">
+      <h4><i class="bi bi-signpost-split"></i> Top rutas</h4>
+      {% for ruta in rutas_mas_usadas %}
+      <div class="card-meta" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+        <span style="display: block; font-weight: 600;">{{ ruta.name }}</span>
+        <span class="badge" style="font-size: 0.75rem; margin-top: 4px;">{{ ruta.bus_count }} buses</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="glass" style="padding: 22px;">
+      <h4><i class="bi bi-exclamation-triangle"></i> Tráfico</h4>
+      {% for nivel in trafico_activo %}
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span style="text-transform: capitalize;">{{ nivel.nivel }}</span>
+        <b>{{ nivel.cantidad }}</b>
+      </div>
+      {% empty %}
+      <p class="text-dim">Sin reportes de tráfico activos</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="glass" style="padding: 22px;">
+  <h4><i class="bi bi-flag"></i> Reportes recientes (hoy)</h4>
+  {% if reportes_recientes %}
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; font-size: 0.85rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <th style="text-align: left; padding: 8px;">Conductor</th>
+            <th style="text-align: left; padding: 8px;">Ruta</th>
+            <th style="text-align: left; padding: 8px;">Tipo</th>
+            <th style="text-align: left; padding: 8px;">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reporte in reportes_recientes %}
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 8px;">{{ reporte.driver.user.get_full_name|default:reporte.driver.user.username }}</td>
+            <td style="padding: 8px; color: var(--neon);">{{ reporte.route.name }}</td>
+            <td style="padding: 8px;">{{ reporte.get_tipo_display }}</td>
+            <td style="padding: 8px;">
+              <span class="badge" style="background: {% if reporte.status == 'abierto' %}rgba(255,100,100,.1){% else %}rgba(100,200,100,.1){% endif %};">
+                {{ reporte.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-dim">Sin reportes hoy</p>
+  {% endif %}
+</div>
+
+<style>
+table { border-collapse: collapse; }
+th { font-weight: 600; color: var(--text-dim); }
+td { vertical-align: middle; }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+</style>
+{% endblock %}

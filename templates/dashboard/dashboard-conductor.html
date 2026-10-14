@@ -1,0 +1,62 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Panel conductor{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Panel conductor</span>{% endblock %}
+{% block page_title %}Hola, {{ user.first_name|default:user.username }} 👋{% endblock %}
+{% block page_head_actions %}
+<span class="status-dot {% if profile.assigned_bus.status == 'en_ruta' %}ok{% elif profile.assigned_bus.status == 'retraso' %}warn{% else %}bad{% endif %}" style="font-size:.95rem;">
+  {{ profile.assigned_bus.get_status_display|default:"Sin bus asignado" }}
+</span>
+{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:26px;">
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Ruta asignada</span><div class="icon"><i class="bi bi-signpost-split"></i></div></div>
+    <div class="value" style="font-size:1.3rem;">{{ profile.assigned_route.name|default:"Sin asignar" }}</div>
+    <span class="text-dim" style="font-size:.8rem;">{{ profile.assigned_route.origin|default:"" }} {% if profile.assigned_route %}- {{ profile.assigned_route.destination }}{% endif %}</span></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Bus asignado</span><div class="icon"><i class="bi bi-bus-front"></i></div></div>
+    <div class="value" style="font-size:1.3rem;">{{ profile.assigned_bus.code|default:"—" }}</div>
+    <span class="text-dim" style="font-size:.8rem;">Placa {{ profile.assigned_bus.plate|default:"—" }}</span></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Vueltas hoy</span><div class="icon"><i class="bi bi-arrow-repeat"></i></div></div>
+    <div class="value">{{ shifts_today.count }}</div><span class="text-dim" style="font-size:.8rem;">Jornada del día</span></div>
+</div>
+
+<div class="grid" style="grid-template-columns:1fr 340px;gap:20px;">
+  <div class="glass" style="padding:20px;">
+    <h4 style="margin:0 0 14px;">Mi ubicación en la ruta</h4>
+    <a href="{% url 'map:conductor' %}" class="btn btn-outline"><i class="bi bi-map"></i> Abrir mi mapa</a>
+  </div>
+  <div>
+    <div class="glass" style="padding:22px;margin-bottom:18px;">
+      <h4 style="margin:0 0 12px;">Estado del servicio</h4>
+      <form method="post" action="{% url 'reports:shift_status_update' %}">
+        {% csrf_token %}
+        <div class="field"><label>Estado actual</label>
+          <select name="status">
+            <option>En ruta</option><option>En parada</option><option>Con retraso</option><option>Fuera de servicio</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-check2"></i> Actualizar estado</button>
+      </form>
+    </div>
+    <div class="glass" style="padding:22px;">
+      <h4 style="margin:0 0 12px;">Reportar novedad</h4>
+      <a href="{% url 'reports:create' %}" class="btn btn-outline btn-block"><i class="bi bi-flag"></i> Ir a reportes</a>
+    </div>
+  </div>
+</div>
+
+<div class="glass" style="padding:22px;margin-top:20px;">
+  <h4 style="margin:0 0 14px;">Vueltas de hoy</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Vuelta</th><th>Salida</th><th>Llegada</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for s in shifts_today %}
+        <tr><td>{{ s.lap_number }}</td><td>{{ s.started_at|time:"H:i" }}</td><td>{{ s.ended_at|time:"H:i"|default:"—" }}</td>
+          <td><span class="status-dot {% if s.on_time %}ok{% else %}warn{% endif %}">{% if s.ended_at %}{% if s.on_time %}Completada{% else %}Con retraso{% endif %}{% else %}En curso{% endif %}</span></td></tr>
+        {% empty %}<tr><td colspan="4"><div class="empty-state"><i class="bi bi-inbox"></i>Sin vueltas registradas hoy.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

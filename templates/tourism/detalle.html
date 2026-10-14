@@ -1,0 +1,45 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}{{ place.name }}{% endblock %}
+{% block eyebrow %}<span class="eyebrow">{{ place.tag }}</span>{% endblock %}
+{% block page_title %}{{ place.name }}{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;">
+  <div>
+    {% if place.cover_image %}<img src="{{ place.cover_image.url }}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-md);margin-bottom:16px;">{% endif %}
+    {% if place.gallery.all %}
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      {% for img in place.gallery.all %}<img src="{{ img.image.url }}" style="border-radius:var(--radius-sm);aspect-ratio:1;object-fit:cover;">{% endfor %}
+    </div>
+    {% endif %}
+    <h4>Historia</h4><p>{{ place.history }}</p>
+    <h4>Curiosidades</h4><p>{{ place.curiosities }}</p>
+
+    <h4 style="margin-top:20px;">Comentarios</h4>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'interactions:comment_create' 'tourism' 'touristplace' place.pk %}" style="margin-bottom:16px;">
+      {% csrf_token %}<textarea name="body" placeholder="Escribe un comentario..." required></textarea>
+      <button type="submit" class="btn btn-outline btn-sm" style="margin-top:8px;"><i class="bi bi-send"></i> Publicar</button>
+    </form>
+    {% endif %}
+    {% for c in place|comments_for %}
+      <div class="glass" style="padding:14px;margin-bottom:10px;"><b>{{ c.user.get_full_name|default:c.user.username }}</b>
+        <span class="text-dim" style="font-size:.76rem;">· {{ c.created_at|timesince }}</span>
+        <p class="text-dim" style="margin:4px 0 0;">{{ c.body }}</p></div>
+    {% empty %}<p class="text-dim">Sé el primero en comentar.</p>{% endfor %}
+  </div>
+
+  <div>
+    <a href="{% url 'map:page' %}" class="btn btn-primary btn-block" style="margin-bottom:16px;"><i class="bi bi-signpost"></i> Ver ubicación en el mapa</a>
+    {% if user.is_authenticated %}
+    <div class="glass" style="padding:20px;">
+      <h4 style="margin:0 0 10px;">Califica este lugar</h4>
+      <form method="post" action="{% url 'interactions:rate_object' 'tourism' 'touristplace' place.pk %}" class="star-rate">
+        {% csrf_token %}{% for i in "12345" %}<button type="submit" name="score" value="{{ i }}" class="btn btn-ghost btn-icon"><i class="bi bi-star"></i></button>{% endfor %}
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

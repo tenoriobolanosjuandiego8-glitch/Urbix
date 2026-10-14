@@ -1,0 +1,26 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Favoritos{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Tus lugares y rutas guardadas</span>{% endblock %}
+{% block page_title %}Favoritos{% endblock %}
+
+{% block content %}
+<div class="grid grid-3">
+  {% for fav in favorites %}
+  <div class="card" data-aos="fade-up">
+    <div class="card-body">
+      <span class="badge">{{ fav.content_type.model }}</span>
+      <h3 class="card-title" style="margin-top:8px;">{{ fav.content_object|default:"Elemento eliminado" }}</h3>
+      <form method="post" action="{% url 'interactions:favorite_toggle' fav.content_type.app_label fav.content_type.model fav.object_id %}" style="margin-top:10px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm"><i class="bi bi-trash"></i> Quitar</button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <i class="bi bi-heart"></i>Aún no tienes favoritos guardados.
+    <div style="margin-top:14px;"><a href="{% url 'restaurants:list' %}" class="btn btn-outline btn-sm">Explorar lugares</a></div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

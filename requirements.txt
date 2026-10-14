@@ -1,0 +1,20 @@
+# URBIX — Backend Django
+# Instalación: pip install -r requirements.txt
+
+Django>=5.0
+djangorestframework
+Pillow
+python-dotenv
+anthropic
+
+# Necesarios para publicar el sitio en internet (Render / producción)
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url
+
+# Necesario solo si usas MariaDB/MySQL como base de datos (DJANGO_DB_ENGINE=mariadb)
+PyMySQL
+
+# Notificaciones push reales (llegan aunque no tengas la app abierta)
+pywebpush

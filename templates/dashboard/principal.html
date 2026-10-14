@@ -1,0 +1,74 @@
+{% extends "base_app.html" %}
+{% block body_attrs %} data-tour-eligible="1"{% endblock %}
+{% block navbar_title %}Inicio{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Hola, {{ user.first_name|default:user.username }} 👋</span>{% endblock %}
+{% block page_title %}¿A dónde quieres ir hoy?{% endblock %}
+{% block page_head_actions %}<a href="{% url 'map:page' %}" class="btn btn-primary"><i class="bi bi-geo-alt"></i> Ver mi bus en el mapa</a>{% endblock %}
+
+{% block content %}
+<div class="grid grid-4" style="margin-bottom:34px;">
+  <a href="{% url 'routes:list' %}" class="card glass" data-aos="fade-up" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-signpost-split" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Rutas</h4>
+  </a>
+  <a href="{% url 'routes:schedules' %}" class="card glass" data-aos="fade-up" data-aos-delay="50" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-clock-history" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Horarios</h4>
+  </a>
+  <a href="{% url 'tourism:list' %}" class="card glass" data-aos="fade-up" data-aos-delay="100" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-camera" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Puntos de interés</h4>
+  </a>
+  <a href="{% url 'map:page' %}" class="card glass" data-aos="fade-up" data-aos-delay="150" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-map" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Mapa</h4>
+  </a>
+  <a href="{% url 'restaurants:list' %}" class="card glass" data-aos="fade-up" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-cup-hot" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Restaurantes</h4>
+  </a>
+  <a href="{% url 'hotels:list' %}" class="card glass" data-aos="fade-up" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-building" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Hoteles</h4>
+  </a>
+  <a href="{% url 'events:list' %}" class="card glass" data-aos="fade-up" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-calendar-event" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Eventos</h4>
+  </a>
+  <a href="{% url 'accounts:profile' %}" class="card glass" data-aos="fade-up" style="padding:22px;text-align:center;">
+    <div style="margin:0 auto 12px;width:52px;height:52px;background:rgba(76,255,110,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-heart" style="color:var(--neon);font-size:1.4rem;"></i></div>
+    <h4 style="margin:0;">Favoritos</h4>
+  </a>
+</div>
+
+{% if recommendations %}
+<h3 style="margin:34px 0 16px;"><i class="bi bi-stars text-neon"></i> Recomendado para ti</h3>
+<div class="grid grid-3" style="margin-bottom:10px;">
+  {% for item in recommendations %}
+  <a href="{% if item.business_type %}{% url 'business:detail' item.pk %}{% endif %}" class="card" style="text-decoration:none;">
+    {% if item.cover_image %}<img class="card-img" src="{{ item.cover_image.url }}">{% endif %}
+    <div class="card-body">
+      <span class="badge">{{ item.tag|default:item.get_business_type_display }}</span>
+      <h3 class="card-title" style="margin-top:8px;">{{ item.name }}</h3>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<h3 style="margin:34px 0 16px;">Próximos eventos</h3>
+<div class="grid grid-3">
+  {% for e in events %}
+  <div class="card">
+    {% if e.cover_image %}<img class="card-img" src="{{ e.cover_image.url }}">{% endif %}
+    <div class="card-body">
+      <h3 class="card-title">{{ e.name }}</h3>
+      <div class="card-meta"><span><i class="bi bi-geo-alt"></i> {{ e.place }}</span><span><i class="bi bi-clock"></i> {{ e.start_at|date:"d M, g:i A" }}</span></div>
+      <a href="{% url 'events:detail' e.pk %}" class="btn btn-primary btn-sm" style="margin-top:10px;">Ver más</a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-calendar-x"></i>No hay eventos próximos.</div>
+  {% endfor %}
+</div>
+{% endblock %}

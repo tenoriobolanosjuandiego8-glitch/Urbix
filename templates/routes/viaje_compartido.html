@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Viaje compartido · URBIX{% endblock %}
+{% block body %}
+<div class="hero-inicio" style="justify-content:flex-start;padding-top:60px;">
+  <img src="{% static 'images/urbix-logo.jpg' %}" style="width:56px;border-radius:14px;margin-bottom:16px;">
+
+  {% if share.is_expired %}
+    <h2>Este enlace ya expiró</h2>
+    <p class="text-dim">Los viajes compartidos duran 4 horas por seguridad.</p>
+  {% else %}
+    <span class="eyebrow">{{ share.user.get_full_name|default:share.user.username }} está compartiendo su viaje</span>
+    <h2 style="margin-top:6px;">
+      {% if share.origin_stop %}{{ share.origin_stop.name }}{% else %}Origen{% endif %}
+      <i class="bi bi-arrow-right"></i>
+      {% if share.destination_stop %}{{ share.destination_stop.name }}{% else %}Destino{% endif %}
+    </h2>
+    {% if share.route %}
+      <div class="badge" style="margin-top:10px;background:{{ share.route.color }}22;color:{{ share.route.color }};">
+        <span class="route-color" style="background:{{ share.route.color }};display:inline-block;"></span> {{ share.route.operator.name }} · {{ share.route.name }}
+      </div>
+    {% endif %}
+    <p class="text-dim" style="margin-top:16px;font-size:.82rem;">Este enlace expira {{ share.expires_at|timeuntil }} · compártelo solo con personas de confianza.</p>
+  {% endif %}
+</div>
+{% endblock %}

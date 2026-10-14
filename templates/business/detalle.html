@@ -1,0 +1,93 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}{{ business.name }}{% endblock %}
+{% block eyebrow %}<span class="eyebrow">{{ business.get_business_type_display }}</span>{% endblock %}
+{% block page_title %}{{ business.name }}{% endblock %}
+{% block page_head_actions %}
+{% if is_owner %}<a href="{% url 'business:edit' business.pk %}" class="btn btn-ghost btn-sm"><i class="bi bi-pencil"></i> Editar perfil</a>{% endif %}
+{% if not business.is_public %}<span class="badge" style="background:rgba(255,204,77,.15);color:var(--warn);">{{ business.get_status_display }}</span>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;">
+  <div>
+    {% if business.cover_image %}<img src="{{ business.cover_image.url }}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-md);margin-bottom:16px;">{% endif %}
+    {% if business.gallery.all %}
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      {% for img in business.gallery.all %}<img src="{{ img.image.url }}" style="border-radius:var(--radius-sm);aspect-ratio:1;object-fit:cover;">{% endfor %}
+    </div>
+    {% endif %}
+    <p>{{ business.description }}</p>
+
+    {% if promotions %}
+    <h4 style="margin-top:22px;">Promociones activas</h4>
+    <div class="grid grid-2">
+      {% for p in promotions %}
+      <div class="glass" style="padding:16px;">
+        {% if p.discount_text %}<span class="badge" style="background:rgba(76,255,110,.15);color:var(--neon);">{{ p.discount_text }}</span>{% endif %}
+        <h4 style="margin:8px 0 4px;">{{ p.title }}</h4>
+        <p class="text-dim" style="font-size:.82rem;">{{ p.description }}</p>
+        {% if p.valid_until %}<p class="text-dim" style="font-size:.75rem;">Válida hasta {{ p.valid_until }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h4 style="margin-top:24px;">Reseñas <span class="rating"><i class="bi bi-star-fill"></i> {{ business|avg_rating }}</span></h4>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'interactions:comment_create' 'business' 'business' business.pk %}" style="margin-bottom:16px;">
+      {% csrf_token %}<textarea name="body" placeholder="Cuenta tu experiencia..." required></textarea>
+      <button type="submit" class="btn btn-outline btn-sm" style="margin-top:8px;"><i class="bi bi-send"></i> Publicar reseña</button>
+    </form>
+    <form method="post" action="{% url 'interactions:rate_object' 'business' 'business' business.pk %}" class="star-rate" style="margin-bottom:20px;">
+      {% csrf_token %}{% for i in "12345" %}<button type="submit" name="score" value="{{ i }}" class="btn btn-ghost btn-icon"><i class="bi bi-star"></i></button>{% endfor %}
+    </form>
+    {% endif %}
+
+    {% for c in business|comments_for %}
+      <div class="glass" style="padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;">
+          <b>{{ c.user.get_full_name|default:c.user.username }}</b>
+          <span class="text-dim" style="font-size:.76rem;">{{ c.created_at|timesince }}</span>
+        </div>
+        <p class="text-dim" style="margin:4px 0 8px;">{{ c.body }}</p>
+        <div style="display:flex;gap:10px;">
+          {% if is_owner %}
+          <form method="post" action="{% url 'interactions:comment_create' 'business' 'business' business.pk %}" style="display:flex;gap:6px;flex:1;">
+            {% csrf_token %}<input type="hidden" name="parent_id" value="{{ c.pk }}">
+            <input type="text" name="body" placeholder="Responder como negocio..." style="flex:1;">
+            <button type="submit" class="btn btn-ghost btn-sm"><i class="bi bi-reply"></i></button>
+          </form>
+          {% endif %}
+          {% if user.is_authenticated %}
+          <form method="post" action="{% url 'interactions:flag_comment' c.pk %}" onsubmit="return confirm('¿Denunciar este comentario?');">
+            {% csrf_token %}<input type="hidden" name="reason" value="otro">
+            <button type="submit" class="btn btn-ghost btn-sm" title="Denunciar"><i class="bi bi-flag"></i></button>
+          </form>
+          {% endif %}
+        </div>
+        {% for reply in c.replies.all %}
+          <div style="margin:8px 0 0 20px;padding:10px;border-left:2px solid var(--border);">
+            <b style="font-size:.82rem;">{{ reply.user.get_full_name|default:reply.user.username }}</b>
+            <span class="badge" style="font-size:.6rem;">Negocio</span>
+            <p class="text-dim" style="font-size:.82rem;margin:2px 0 0;">{{ reply.body }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% empty %}<p class="text-dim">Sé el primero en dejar una reseña.</p>{% endfor %}
+  </div>
+
+  <div>
+    <div class="glass" style="padding:20px;">
+      {% if business.address %}<p class="text-dim" style="font-size:.85rem;"><i class="bi bi-geo-alt"></i> {{ business.address }}</p>{% endif %}
+      {% if business.opening_hours %}<p class="text-dim" style="font-size:.85rem;"><i class="bi bi-clock"></i> {{ business.opening_hours }}</p>{% endif %}
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+        {% if business.phone %}<a href="{% url 'business:click' business.pk 'phone' %}" class="btn btn-outline btn-sm"><i class="bi bi-telephone"></i> Llamar</a>{% endif %}
+        {% if business.whatsapp or business.phone %}<a href="{% url 'business:click' business.pk 'whatsapp' %}" class="btn btn-primary btn-sm"><i class="bi bi-whatsapp"></i> WhatsApp</a>{% endif %}
+        {% if business.website %}<a href="{% url 'business:click' business.pk 'website' %}" class="btn btn-ghost btn-sm"><i class="bi bi-globe"></i> Sitio web</a>{% endif %}
+        {% if business.instagram %}<a href="{% url 'business:click' business.pk 'instagram' %}" class="btn btn-ghost btn-sm"><i class="bi bi-instagram"></i> Instagram</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

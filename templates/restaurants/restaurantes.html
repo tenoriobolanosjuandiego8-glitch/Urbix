@@ -1,0 +1,53 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}Restaurantes{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Gastronomía payanesa</span>{% endblock %}
+{% block page_title %}Restaurantes{% endblock %}
+
+{% block content %}
+<form method="get" class="input-wrap" style="max-width:420px;margin-bottom:16px;">
+  <i class="bi bi-search"></i><input type="search" name="q" value="{{ query }}" placeholder="Buscar restaurante...">
+</form>
+<div class="tabs">
+  <a href="?tag=todos" class="tab {% if active_tag == 'todos' %}active{% endif %}">Todos</a>
+  {% for t in tags %}<a href="?tag={{ t|urlencode }}" class="tab {% if active_tag == t %}active{% endif %}">{{ t }}</a>{% endfor %}
+</div>
+
+<div class="grid grid-3">
+  {% for r in restaurants %}
+  <div class="card" data-aos="fade-up">
+    {% if r.cover_image %}<img class="card-img" src="{{ r.cover_image.url }}" alt="{{ r.name }}">
+    {% else %}<img class="card-img" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop" alt="{{ r.name }}">{% endif %}
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <h3 class="card-title">{{ r.name }}</h3>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'interactions:favorite_toggle' 'restaurants' 'restaurant' r.pk %}">{% csrf_token %}
+          <button class="btn btn-icon btn-ghost" type="submit"><i class="bi {% if user|is_favorite:r %}bi-heart-fill{% else %}bi-heart{% endif %}" style="{% if user|is_favorite:r %}color:var(--neon);{% endif %}"></i></button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="card-meta">
+        <span class="rating"><i class="bi bi-star-fill"></i> {{ r|avg_rating }}</span>
+        <span>{{ r.tag }}</span><span>{{ r.price_range }}</span>
+      </div>
+      <p class="text-dim" style="font-size:.85rem;">{{ r.address }}</p>
+      <div class="card-actions">
+        <a class="btn btn-primary btn-sm" href="{% url 'restaurants:detail' r.pk %}"><i class="bi bi-eye"></i> Ver más</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'map:page' %}"><i class="bi bi-signpost"></i> Cómo llegar</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-emoji-frown"></i>No encontramos restaurantes con ese filtro.</div>
+  {% endfor %}
+</div>
+
+{% if restaurants.has_other_pages %}
+<div class="pagination">
+  {% for num in restaurants.paginator.page_range %}
+    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}"><button class="{% if restaurants.number == num %}active{% endif %}">{{ num }}</button></a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

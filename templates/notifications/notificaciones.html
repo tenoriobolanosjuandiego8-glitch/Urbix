@@ -1,0 +1,35 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block navbar_title %}Notificaciones{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Alertas en tiempo real</span>{% endblock %}
+{% block page_title %}Notificaciones{% endblock %}
+{% block page_head_actions %}
+<button class="btn btn-outline btn-sm" onclick="enablePushNotifications('{{ vapid_public_key }}')"><i class="bi bi-bell-fill"></i> Activar notificaciones push</button>
+<form method="post" action="{% url 'notifications:mark_all_read' %}">{% csrf_token %}
+  <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-check2-all"></i> Marcar todas como leídas</button>
+</form>
+{% endblock %}
+{% block content %}
+<div class="glass" style="padding:8px;max-width:680px;">
+  {% for n in notifications %}
+    <div class="notif-item" style="padding:16px;border-bottom:1px solid var(--border);{% if not n.is_read %}background:rgba(76,255,110,.04);{% endif %}">
+      <div class="ic"><i class="bi {{ n.icon }}"></i></div>
+      <div style="flex:1;">
+        <div class="t" style="font-size:.92rem;">{{ n.title }}</div>
+        <div class="s">{{ n.body }} · {{ n.created_at|timesince }}</div>
+      </div>
+      {% if not n.is_read %}
+      <form method="post" action="{% url 'notifications:mark_read' n.pk %}">{% csrf_token %}
+        <button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-check2"></i></button>
+      </form>
+      {% endif %}
+    </div>
+  {% empty %}
+    <div class="empty-state"><i class="bi bi-bell-slash"></i>No tienes notificaciones.</div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block extra_scripts %}
+{{ block.super }}
+<script src="{% static 'js/push-notifications.js' %}"></script>
+{% endblock %}

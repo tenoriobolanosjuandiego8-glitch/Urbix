@@ -1,0 +1,35 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}{{ event.name }}{% endblock %}
+{% block eyebrow %}<span class="eyebrow">{{ event.get_category_display }}</span>{% endblock %}
+{% block page_title %}{{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;">
+  <div>
+    {% if event.cover_image %}<img src="{{ event.cover_image.url }}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-md);margin-bottom:16px;">{% endif %}
+    <p>{{ event.description }}</p>
+
+    <h4 style="margin-top:20px;">Comentarios</h4>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'interactions:comment_create' 'events' 'event' event.pk %}" style="margin-bottom:16px;">
+      {% csrf_token %}<textarea name="body" placeholder="Escribe un comentario..." required></textarea>
+      <button type="submit" class="btn btn-outline btn-sm" style="margin-top:8px;"><i class="bi bi-send"></i> Publicar</button>
+    </form>
+    {% endif %}
+    {% for c in event|comments_for %}
+      <div class="glass" style="padding:14px;margin-bottom:10px;"><b>{{ c.user.get_full_name|default:c.user.username }}</b>
+        <span class="text-dim" style="font-size:.76rem;">· {{ c.created_at|timesince }}</span>
+        <p class="text-dim" style="margin:4px 0 0;">{{ c.body }}</p></div>
+    {% empty %}<p class="text-dim">Sé el primero en comentar.</p>{% endfor %}
+  </div>
+
+  <div>
+    <div class="glass" style="padding:20px;">
+      <div class="card-meta"><span><i class="bi bi-calendar-event"></i> {{ event.start_at|date:"d M Y" }}</span><span><i class="bi bi-clock"></i> {{ event.start_at|date:"g:i A" }}</span></div>
+      <p class="text-dim" style="font-size:.85rem;"><i class="bi bi-geo-alt"></i> {{ event.place }}</p>
+      <a href="{% url 'map:page' %}" class="btn btn-primary btn-block" style="margin-top:12px;"><i class="bi bi-signpost"></i> Cómo llegar</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

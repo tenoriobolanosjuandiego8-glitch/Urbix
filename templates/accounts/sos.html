@@ -1,0 +1,49 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}SOS{% endblock %}
+{% block eyebrow %}<span class="eyebrow" style="color:var(--danger);">Emergencia</span>{% endblock %}
+{% block page_title %}Botón SOS{% endblock %}
+
+{% block content %}
+{% if not contacts %}
+<div class="empty-state">
+  <i class="bi bi-person-x"></i>Primero agrega al menos un contacto de emergencia.
+  <div style="margin-top:14px;"><a href="{% url 'accounts:emergency_contacts' %}" class="btn btn-outline btn-sm">Agregar contacto</a></div>
+</div>
+{% else %}
+<div class="glass" style="padding:26px;max-width:520px;text-align:center;">
+  <i class="bi bi-exclamation-triangle-fill" style="font-size:2.6rem;color:var(--danger);"></i>
+  <h3 style="margin:14px 0 6px;">¿Necesitas ayuda ahora?</h3>
+  <p class="text-dim" style="font-size:.88rem;">Al presionar el botón, se abrirá WhatsApp con tu ubicación actual y un mensaje de emergencia listo para enviar a tu contacto.</p>
+
+  <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+    {% for c in contacts %}
+    <button class="btn btn-danger btn-block sos-send" data-phone="{{ c.phone }}" data-name="{{ c.name }}">
+      <i class="bi bi-whatsapp"></i> Alertar a {{ c.name }}
+    </button>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<script>
+document.querySelectorAll('.sos-send').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const phone = btn.dataset.phone.replace(/\D/g, '');
+    const build = (lat, lng) => {
+      const locText = lat ? `Mi ubicación: https://www.google.com/maps?q=${lat},${lng}` : 'No pude obtener mi ubicación exacta.';
+      const msg = encodeURIComponent(`🚨 Necesito ayuda. Estoy usando URBIX y quería avisarte de inmediato. ${locText}`);
+      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    };
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        (pos) => build(pos.coords.latitude, pos.coords.longitude),
+        () => build(null, null)
+      );
+    } else {
+      build(null, null);
+    }
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  });
+});
+</script>
+{% endblock %}

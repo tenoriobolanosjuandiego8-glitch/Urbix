@@ -1,0 +1,126 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Mi mapa{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Modo conductor</span>{% endblock %}
+{% block page_title %}{% if bus %}Bus {{ bus.code }}{% else %}Sin bus asignado{% endif %}{% endblock %}
+{% block page_head_actions %}
+{% if bus %}<button class="btn btn-primary btn-sm" id="botontransmitir"><i class="bi bi-broadcast"></i> Iniciar transmisión</button>{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if not bus or not ruta %}
+<div class="empty-state"><i class="bi bi-bus-front"></i>Aún no tienes bus o ruta asignados. Pide al administrador que te los asigne.</div>
+{% else %}
+<div class="grid" style="grid-template-columns:2fr 1fr;gap:18px;align-items:start;">
+  <div id="mapaconductor" style="height:calc(100vh - 200px);min-height:460px;border-radius:var(--radius-md);border:1px solid var(--border);"></div>
+  <div>
+    <div class="glass" style="padding:18px;margin-bottom:14px;">
+      <span class="badge" style="background:{{ ruta.color }}22;color:{{ ruta.color }};border-color:{{ ruta.color }}55;">{{ ruta.name }}</span>
+      <h4 style="margin:10px 0 4px;">{{ ruta.origin }} → {{ ruta.destination }}</h4>
+      <p class="text-dim" style="font-size:.8rem;margin:0;">Placa {{ bus.plate }}</p>
+    </div>
+    <div class="glass" style="padding:18px;margin-bottom:14px;">
+      <div class="card-meta" style="flex-direction:column;gap:8px;align-items:flex-start;">
+        <span><i class="bi bi-speedometer2"></i> Velocidad: <b id="velocidad">0</b> km/h</span>
+        <span><i class="bi bi-compass"></i> Próximo paradero: <b id="proximo">—</b></span>
+        <span><i class="bi bi-rulers"></i> Distancia: <b id="distancia">—</b></span>
+        <span><i class="bi bi-wifi"></i> Estado: <b id="estado">Detenido</b></span>
+      </div>
+    </div>
+    <div class="glass" style="padding:18px;">
+      <h4 style="margin:0 0 10px;">Paraderos de la ruta</h4>
+      <ol style="padding-left:18px;margin:0;font-size:.85rem;max-height:240px;overflow:auto;">
+        {% for p in paradas %}<li>{{ p.name }}</li>{% endfor %}
+      </ol>
+    </div>
+    <a href="{% url 'reports:create' %}" class="btn btn-outline btn-block" style="margin-top:14px;"><i class="bi bi-flag"></i> Reportar novedad</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+{% if bus and ruta %}
+{{ trazado|json_script:"dtrazado" }}
+{{ paradas|json_script:"dparadas" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const trazado = JSON.parse(document.getElementById('dtrazado').textContent);
+const paradas = JSON.parse(document.getElementById('dparadas').textContent);
+const colorruta = "{{ ruta.color }}";
+const idbus = {{ bus.id }};
+const urlreporte = "{% url 'gps:report_location' %}";
+const csrf = "{{ csrf_token }}";
+
+const mapa = L.map('mapaconductor', { zoomControl:false }).setView([2.4448, -76.6147], 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap', maxZoom:19 }).addTo(mapa);
+L.control.zoom({ position:'bottomright' }).addTo(mapa);
+
+if(trazado.length > 1){
+  const linea = L.polyline(trazado, { color:colorruta, weight:6, opacity:.85 }).addTo(mapa);
+  mapa.fitBounds(linea.getBounds(), { padding:[30,30] });
+}
+paradas.forEach((p, i) => {
+  L.marker(p.pos, { icon: L.divIcon({ className:'', iconSize:[26,26],
+    html:`<div style="width:26px;height:26px;border-radius:50%;background:${colorruta};color:#000;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center;border:2px solid #fff;">${i+1}</div>` })
+  }).addTo(mapa).bindPopup(`<b>${p.name}</b>`);
+});
+
+const iconobus = L.divIcon({ className:'', iconSize:[34,34],
+  html:'<div style="width:34px;height:34px;border-radius:50%;background:#4CFF6E;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(76,255,110,.25);color:#000;"><i class="bi bi-bus-front-fill"></i></div>' });
+let marcador = null, vigilante = null, ultimoenvio = 0;
+
+function distancia(a, b){
+  const r = 6371000, k = Math.PI/180;
+  const dl = (b[0]-a[0])*k, dn = (b[1]-a[1])*k;
+  const h = Math.sin(dl/2)**2 + Math.cos(a[0]*k)*Math.cos(b[0]*k)*Math.sin(dn/2)**2;
+  return 2*r*Math.asin(Math.sqrt(h));
+}
+
+function actualizar(pos){
+  const c = pos.coords, punto = [c.latitude, c.longitude];
+  const kmh = Math.max(0, Math.round((c.speed || 0) * 3.6));
+  if(!marcador) marcador = L.marker(punto, { icon: iconobus }).addTo(mapa);
+  else marcador.setLatLng(punto);
+  mapa.panTo(punto);
+  document.getElementById('velocidad').textContent = kmh;
+  let mejor = null;
+  paradas.forEach(p => { const d = distancia(punto, p.pos); if(!mejor || d < mejor.d) mejor = { d, p }; });
+  if(mejor){
+    document.getElementById('proximo').textContent = mejor.p.name;
+    document.getElementById('distancia').textContent = mejor.d < 1000 ? Math.round(mejor.d) + ' m' : (mejor.d/1000).toFixed(1) + ' km';
+  }
+  const ahora = Date.now();
+  if(ahora - ultimoenvio > 4000){
+    ultimoenvio = ahora;
+    fetch(urlreporte, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'X-CSRFToken':csrf },
+      body: JSON.stringify({ bus_id: idbus, lat: c.latitude, lng: c.longitude, speed: kmh, heading: c.heading || 0 }),
+    }).catch(() => {});
+  }
+}
+
+const boton = document.getElementById('botontransmitir');
+boton.addEventListener('click', () => {
+  if(vigilante !== null){
+    navigator.geolocation.clearWatch(vigilante);
+    vigilante = null;
+    boton.innerHTML = '<i class="bi bi-broadcast"></i> Iniciar transmisión';
+    document.getElementById('estado').textContent = 'Detenido';
+    return;
+  }
+  if(!navigator.geolocation){ document.getElementById('estado').textContent = 'Sin GPS'; return; }
+  vigilante = navigator.geolocation.watchPosition(actualizar, () => {
+    document.getElementById('estado').textContent = 'Permiso de ubicación denegado';
+  }, { enableHighAccuracy:true, maximumAge:2000, timeout:15000 });
+  boton.innerHTML = '<i class="bi bi-stop-circle"></i> Detener transmisión';
+  document.getElementById('estado').textContent = 'Transmitiendo';
+});
+</script>
+{% endif %}
+{% endblock %}

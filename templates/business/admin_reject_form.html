@@ -1,0 +1,16 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Rechazar negocio{% endblock %}
+{% block page_title %}Rechazar {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:26px;max-width:480px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="field"><label>{{ form.reason.label }}</label>{{ form.reason }}</div>
+    <div class="card-actions">
+      <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Confirmar rechazo</button>
+      <a href="{% url 'business:admin_list' %}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Recuperar contraseña · URBIX{% endblock %}
+
+{% block body %}
+<div class="auth-shell">
+  <div class="auth-visual">
+    <div style="position:relative;z-index:1;">
+      <span class="eyebrow">Recuperación de acceso</span>
+      <h2 style="font-size:2rem;max-width:420px;">¿Olvidaste tu contraseña? Sin problema.</h2>
+      <p class="text-dim" style="max-width:380px;">Te enviaremos un enlace seguro a tu correo para restablecerla.</p>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-card glass">
+      <div class="auth-logo">
+        <img src="{% static 'images/urbix-logo.jpg' %}" alt="URBIX">
+        <div><h3 style="margin:0;">UR<span class="text-neon">BIX</span></h3><span class="text-dim" style="font-size:.78rem;">Recuperar contraseña</span></div>
+      </div>
+
+      {% if not sent %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <p class="text-dim" style="font-size:.85rem;margin-bottom:20px;">Ingresa el correo asociado a tu cuenta y te enviaremos las instrucciones.</p>
+        <div class="field"><label>Correo electrónico</label><div class="input-wrap"><i class="bi bi-envelope"></i>{{ form.email }}</div></div>
+        <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-send"></i> Enviar enlace</button>
+      </form>
+      {% else %}
+      <div style="text-align:center;padding:20px 0;">
+        <i class="bi bi-check-circle text-neon" style="font-size:2.6rem;"></i>
+        <h3 style="margin-top:14px;">Revisa tu correo</h3>
+        <p class="text-dim">Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña.</p>
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-block" style="margin-top:14px;">Volver a iniciar sesión</a>
+      </div>
+      {% endif %}
+
+      <p style="text-align:center;margin-top:22px;font-size:.85rem;color:var(--text-dim);">
+        <a href="{% url 'accounts:login' %}" class="text-neon"><i class="bi bi-arrow-left"></i> Volver a iniciar sesión</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

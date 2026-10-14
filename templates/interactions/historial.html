@@ -1,0 +1,25 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Historial{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Tu actividad reciente</span>{% endblock %}
+{% block page_title %}Historial{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:8px;max-width:720px;">
+  {% for e in entries %}
+    <div class="notif-item" style="padding:14px 12px;border-bottom:1px solid var(--border);">
+      <div class="ic">
+        {% if e.kind == 'search' %}<i class="bi bi-search"></i>
+        {% elif e.kind == 'favorite' %}<i class="bi bi-heart-fill"></i>
+        {% elif e.kind == 'comment' %}<i class="bi bi-chat-dots"></i>
+        {% else %}<i class="bi bi-eye"></i>{% endif %}
+      </div>
+      <div>
+        <div class="t">{{ e.detail|default:e.content_object|default:"Actividad" }}</div>
+        <div class="s">{{ e.get_kind_display }} · {{ e.created_at|timesince }}</div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty-state"><i class="bi bi-clock-history"></i>Aún no tienes actividad registrada. Explora rutas, lugares o planifica un viaje.</div>
+  {% endfor %}
+</div>
+{% endblock %}

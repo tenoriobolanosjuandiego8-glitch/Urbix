@@ -1,0 +1,34 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}Turismo{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Ciudad blanca</span>{% endblock %}
+{% block page_title %}Lugares turísticos{% endblock %}
+
+{% block content %}
+<div class="grid grid-3">
+  {% for p in places %}
+  <div class="card" data-aos="fade-up">
+    {% if p.cover_image %}<img class="card-img" src="{{ p.cover_image.url }}" alt="{{ p.name }}">
+    {% else %}<img class="card-img" src="https://images.unsplash.com/photo-1548574505-5e239809ee19?q=80&w=800&auto=format&fit=crop" alt="{{ p.name }}">{% endif %}
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <h3 class="card-title">{{ p.name }}</h3>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'interactions:favorite_toggle' 'tourism' 'touristplace' p.pk %}">{% csrf_token %}
+          <button class="btn btn-icon btn-ghost" type="submit"><i class="bi {% if user|is_favorite:p %}bi-heart-fill{% else %}bi-heart{% endif %}" style="{% if user|is_favorite:p %}color:var(--neon);{% endif %}"></i></button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="card-meta"><span>{{ p.tag }}</span></div>
+      <p class="text-dim" style="font-size:.85rem;">{{ p.history|truncatechars:110 }}</p>
+      <div class="card-actions">
+        <a class="btn btn-primary btn-sm" href="{% url 'tourism:detail' p.pk %}"><i class="bi bi-images"></i> Galería e historia</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'map:page' %}"><i class="bi bi-signpost"></i> Ubicación</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-camera"></i>No hay lugares turísticos registrados.</div>
+  {% endfor %}
+</div>
+{% endblock %}

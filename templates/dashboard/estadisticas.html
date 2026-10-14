@@ -1,0 +1,78 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Estadísticas{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Panel administrador</span>{% endblock %}
+{% block page_title %}Estadísticas de uso{% endblock %}
+
+{% block content %}
+<div class="grid grid-4" style="margin-bottom:26px;">
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Usuarios registrados</span><div class="icon"><i class="bi bi-people"></i></div></div><div class="value">{{ users_count }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Rutas con actividad</span><div class="icon"><i class="bi bi-signpost-split"></i></div></div><div class="value">{{ top_routes|length }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Empresas con actividad</span><div class="icon"><i class="bi bi-bus-front"></i></div></div><div class="value">{{ operator_stats|length }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Lugares consultados</span><div class="icon"><i class="bi bi-geo-alt"></i></div></div><div class="value">{{ top_stops|length }}</div></div>
+</div>
+
+{% if not has_data %}
+<div class="empty-state" style="margin-bottom:20px;">
+  <i class="bi bi-bar-chart"></i>
+  Todavía no hay suficiente actividad de usuarios (vistas de rutas y paraderos) para graficar.<br>
+  Los gráficos se llenan solos a medida que la gente use la app (entra a ver rutas y paraderos).
+</div>
+{% endif %}
+
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px;">
+  <div class="glass" style="padding:22px;">
+    <h4 style="margin:0 0 16px;">Rutas más consultadas</h4>
+    <canvas id="chartRoutes" height="220"></canvas>
+  </div>
+  <div class="glass" style="padding:22px;">
+    <h4 style="margin:0 0 16px;">Empresas más consultadas</h4>
+    <canvas id="chartOperators" height="220"></canvas>
+  </div>
+</div>
+
+<div class="grid" style="grid-template-columns:1.4fr 1fr;gap:22px;">
+  <div class="glass" style="padding:22px;">
+    <h4 style="margin:0 0 16px;">Horas pico (actividad por hora del día)</h4>
+    <canvas id="chartHours" height="180"></canvas>
+  </div>
+  <div class="glass" style="padding:22px;">
+    <h4 style="margin:0 0 16px;">Barrios/lugares con más demanda</h4>
+    <canvas id="chartStops" height="220"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+Chart.defaults.color = '#c9d6cf';
+Chart.defaults.borderColor = 'rgba(94,255,141,.14)';
+const neon = '#4CFF6E';
+const palette = ['#4CFF6E','#4dd2ff','#ffcc4d','#b48cff','#ff8bd6','#22c55e','#38bdf8','#fbbf24'];
+
+new Chart(document.getElementById('chartRoutes'), {
+  type: 'bar',
+  data: { labels: {{ chart_top_routes_labels|safe }}, datasets: [{ data: {{ chart_top_routes_data|safe }}, backgroundColor: neon, borderRadius: 6 }] },
+  options: { plugins: { legend: { display:false } }, scales: { y: { beginAtZero:true, ticks:{ precision:0 } } } }
+});
+
+new Chart(document.getElementById('chartOperators'), {
+  type: 'doughnut',
+  data: { labels: {{ chart_operator_labels|safe }}, datasets: [{ data: {{ chart_operator_data|safe }}, backgroundColor: palette }] },
+  options: { plugins: { legend: { position:'bottom', labels:{ boxWidth:10 } } } }
+});
+
+new Chart(document.getElementById('chartHours'), {
+  type: 'line',
+  data: { labels: {{ chart_hours_labels|safe }}, datasets: [{ data: {{ chart_hours_data|safe }}, borderColor: neon, backgroundColor:'rgba(76,255,110,.12)', fill:true, tension:.35 }] },
+  options: { plugins: { legend: { display:false } }, scales: { y: { beginAtZero:true, ticks:{ precision:0 } } } }
+});
+
+new Chart(document.getElementById('chartStops'), {
+  type: 'bar',
+  data: { labels: {{ chart_stops_labels|safe }}, datasets: [{ data: {{ chart_stops_data|safe }}, backgroundColor: '#4dd2ff', borderRadius: 6 }] },
+  options: { indexAxis: 'y', plugins: { legend: { display:false } }, scales: { x: { beginAtZero:true, ticks:{ precision:0 } } } }
+});
+</script>
+{% endblock %}

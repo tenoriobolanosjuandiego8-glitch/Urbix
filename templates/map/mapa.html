@@ -1,0 +1,446 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block navbar_title %}Mapa{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Tiempo real</span>{% endblock %}
+{% block page_title %}Mapa de Popayán{% endblock %}
+{% block page_head_actions %}
+<span id="weatherBadge" class="badge" style="display:none;"></span>
+<button class="btn btn-ghost btn-sm" id="myLocationBtn"><i class="bi bi-crosshair"></i> Mi ubicación en tiempo real</button>
+<div class="badge"><i class="bi bi-broadcast"></i> 4 empresas · datos en vivo</div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<style>
+  .leaflet-popup-content-wrapper{ background:#0f1815; color:#e9fff0; border:1px solid rgba(94,255,141,.3); border-radius:12px; }
+  .leaflet-popup-tip{ background:#0f1815; }
+  .leaflet-control-zoom a{ background:#0f1815 !important; color:#4CFF6E !important; border-color: rgba(94,255,141,.3) !important; }
+  .leaflet-marker-icon{ transition: transform 3.6s linear; }
+  .op-group-title{ font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin:14px 0 6px; padding-left:4px; }
+  .op-group-title:first-child{ margin-top:0; }
+  .marker-cluster-custom{ background:rgba(77,210,255,.25); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .marker-cluster-custom div{ width:34px;height:34px;border-radius:50%;background:rgba(6,9,10,.85);border:2px solid #4dd2ff;color:#4dd2ff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700; }
+  @keyframes pulse-live{ 0%{ box-shadow:0 0 0 6px rgba(77,210,255,.25); } 50%{ box-shadow:0 0 0 12px rgba(77,210,255,.08); } 100%{ box-shadow:0 0 0 6px rgba(77,210,255,.25); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-layout">
+  <div>
+    <div class="glass" id="nearbyPanel" style="padding:16px;margin-bottom:14px;display:none;">
+      <h4 style="margin:0 0 4px;"><i class="bi bi-crosshair text-neon"></i> Buses cerca de ti</h4>
+      <div id="nearbyList"></div>
+    </div>
+    <div class="glass" style="padding:16px;margin-bottom:14px;">
+      <h4 style="margin:0 0 8px;"><i class="bi bi-geo text-neon"></i> Sitios cercanos</h4>
+      <select id="nearbyPlaceCategory" style="margin-bottom:8px;">
+        <option value="farmacia">Farmacias</option>
+        <option value="cajero">Cajeros</option>
+        <option value="gasolinera">Gasolineras</option>
+        <option value="supermercado">Supermercados</option>
+        <option value="hospital">Hospitales</option>
+        <option value="centro_comercial">Centros comerciales</option>
+      </select>
+      <button class="btn btn-outline btn-sm btn-block" id="findNearbyPlacesBtn"><i class="bi bi-search"></i> Buscar cerca de mí</button>
+      <div id="nearbyPlacesList" style="margin-top:10px;"></div>
+    </div>
+    <div class="glass" style="padding:16px;margin-bottom:14px;max-height:60vh;overflow-y:auto;">
+      <h4 style="margin:0 0 4px;">Rutas activas</h4>
+      <div id="routePills"></div>
+    </div>
+    <div id="busCard" style="display:none;"></div>
+  </div>
+  <div id="map"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>
+const MAP_DATA_URL = "{% url 'map:data' %}";
+const POPAYAN_CENTER = [2.4448, -76.6147];
+let map, busMarkers = {}, routeLines = {}, stopCluster = null, routesCache = [];
+let focusedBusId = null;
+
+const CATEGORY_ICON = {
+  'Paradero':'bi-signpost', 'Barrio / sector':'bi-houses', 'Terminal de transporte':'bi-bus-front',
+  'Universidad / colegio':'bi-mortarboard', 'Hospital / centro de salud':'bi-hospital',
+  'Parque':'bi-tree', 'Centro comercial':'bi-bag', 'Punto de referencia':'bi-geo-alt',
+};
+
+function busDivIcon(color, heading){
+  const rotation = heading || 0;
+  return L.divIcon({ className:'', iconSize:[34,34], iconAnchor:[17,17],
+    html:`<div style="width:34px;height:34px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px ${color};border:2px solid #06090a;transform:rotate(${rotation}deg);transition:transform .8s linear;">
+            <i class="bi bi-navigation-fill" style="color:#04150a;font-size:1rem;"></i></div>` });
+}
+function stopDivIcon(icon){
+  return L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[12,12],
+    html:`<div style="width:24px;height:24px;border-radius:50%;background:rgba(6,9,10,.85);border:2px solid #4dd2ff;display:flex;align-items:center;justify-content:center;"><i class="bi ${icon}" style="color:#4dd2ff;font-size:.65rem;"></i></div>` });
+}
+
+async function loadMap(){
+  map = L.map('map', { zoomControl:false }).setView(POPAYAN_CENTER, 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap', maxZoom:19 }).addTo(map);
+  L.control.zoom({ position:'bottomright' }).addTo(map);
+
+  stopCluster = L.markerClusterGroup({
+    iconCreateFunction: (cluster) => L.divIcon({
+      html: `<div class="marker-cluster-custom"><div>${cluster.getChildCount()}</div></div>`,
+      className: '', iconSize: [34,34],
+    }),
+  });
+  map.addLayer(stopCluster);
+
+  await refreshData(true);
+  setInterval(refreshData, 4000); // refresca posiciones cada 4s (listo para GPS real)
+  loadWeather();
+  const pedido = new URLSearchParams(location.search).get('bus');
+  if(pedido && busMarkers[pedido]) focusOnBus(pedido);
+}
+
+async function refreshData(first=false){
+  const res = await fetch(MAP_DATA_URL);
+  
+  // Cargar reportes de tráfico
+  const resTrafico = await fetch('{% url "reports:mapa_reportes" %}');
+  const dataTrafico = await resTrafico.json();
+  mostrarReportesTrafico(dataTrafico.reportes);
+  const data = await res.json();
+  routesCache = data.routes;
+
+  if(first){
+    buildRoutePills(data.routes);
+    data.stops.forEach(s => {
+      const icon = CATEGORY_ICON[s.category] || 'bi-geo-alt';
+      const marker = L.marker(s.pos, { icon: stopDivIcon(icon) });
+      marker.bindPopup(`<b>${s.name}</b><br><span style="opacity:.7;">${s.category}</span>`);
+      stopCluster.addLayer(marker);
+    });
+  }
+
+  data.routes.forEach(r => {
+    if(!routeLines[r.id] && r.path.length > 1){
+      routeLines[r.id] = L.polyline(r.path, { color:r.color, weight:5, opacity:.5 }).addTo(map);
+    }
+  });
+
+  data.buses.forEach(b => {
+    const isFocused = !focusedBusId || focusedBusId === b.id;
+
+    if(busMarkers[b.id]){
+      busMarkers[b.id].setLatLng(b.pos);
+      busMarkers[b.id].setIcon(busDivIcon(busMarkers[b.id]._color, b.heading));
+      busMarkers[b.id]._data = b;
+      if(isFocused && !map.hasLayer(busMarkers[b.id])) busMarkers[b.id].addTo(map);
+      if(!isFocused && map.hasLayer(busMarkers[b.id])) map.removeLayer(busMarkers[b.id]);
+    } else {
+      const route = data.routes.find(r => r.id === b.route) || { color:'#4CFF6E' };
+      const marker = L.marker(b.pos, { icon: busDivIcon(route.color, b.heading) });
+      marker._color = route.color;
+      marker._data = b;
+      marker.bindPopup(`<b>${b.id}</b> · ${b.operator || ''}<br>Conductor: ${b.driver}<br>Estado: ${b.status}<br>Velocidad: ${b.speed}<br>Ocupación: ${b.occupancy || '—'}`);
+      marker.on('click', () => focusOnBus(b.id));
+      busMarkers[b.id] = marker;
+      if(isFocused) marker.addTo(map);
+    }
+  });
+}
+
+function focusOnBus(busId, etaMinutes){
+  focusedBusId = busId;
+  Object.entries(busMarkers).forEach(([id, marker]) => {
+    if(id === busId){
+      if(!map.hasLayer(marker)) marker.addTo(map);
+    } else if(map.hasLayer(marker)){
+      map.removeLayer(marker);
+    }
+  });
+  const bus = busMarkers[busId]?._data;
+  Object.entries(routeLines).forEach(([routeId, line]) => {
+    const isBusRoute = bus && String(bus.route) === routeId;
+    if(isBusRoute){
+      if(!map.hasLayer(line)) line.addTo(map);
+      line.setStyle({ opacity: 0.9 });
+    } else if(map.hasLayer(line)){
+      map.removeLayer(line);
+    }
+  });
+  if(map.hasLayer(stopCluster)) map.removeLayer(stopCluster);
+
+  const marker = busMarkers[busId];
+  if(marker){
+    map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15));
+    showBusCard(bus, etaMinutes);
+  }
+}
+
+function clearBusFocus(){
+  focusedBusId = null;
+  Object.values(busMarkers).forEach(marker => { if(!map.hasLayer(marker)) marker.addTo(map); });
+  Object.values(routeLines).forEach(line => { if(!map.hasLayer(line)) line.addTo(map); line.setStyle({ opacity: 0.5 }); });
+  if(!map.hasLayer(stopCluster)) map.addLayer(stopCluster);
+  document.getElementById('busCard').style.display = 'none';
+  document.getElementById('nearbyPanel').style.display = 'none';
+}
+
+// ---------------- Buses cerca de mí ----------------
+function haversineMeters(lat1, lng1, lat2, lng2){
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI/180;
+  const dLng = (lng2 - lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Devuelve el índice del punto más cercano de un recorrido [[lat,lng],...] a un punto dado, y la distancia en metros
+function nearestPointOnPath(path, lat, lng){
+  let best = { index: 0, dist: Infinity };
+  path.forEach((p, i) => {
+    const d = haversineMeters(lat, lng, p[0], p[1]);
+    if(d < best.dist) best = { index: i, dist: d };
+  });
+  return best;
+}
+
+async function findNearbyBuses(userLat, userLng){
+  const res = await fetch(MAP_DATA_URL);
+  
+  // Cargar reportes de tráfico
+  const resTrafico = await fetch('{% url "reports:mapa_reportes" %}');
+  const dataTrafico = await resTrafico.json();
+  mostrarReportesTrafico(dataTrafico.reportes);
+  const data = await res.json();
+  const RADIUS_METERS = 900;
+
+  const candidates = [];
+  data.routes.forEach(r => {
+    if(r.path.length < 2) return;
+    const nearestOnRoute = nearestPointOnPath(r.path, userLat, userLng);
+    if(nearestOnRoute.dist > RADIUS_METERS) return;
+
+    const busesOnRoute = data.buses.filter(b => b.route === r.id);
+    busesOnRoute.forEach(b => {
+      const busPointIdx = nearestPointOnPath(r.path, b.pos[0], b.pos[1]).index;
+      const busFraction = busPointIdx / (r.path.length - 1);
+      const targetFraction = nearestOnRoute.index / (r.path.length - 1);
+      let fractionDiff = targetFraction - busFraction;
+      if(fractionDiff < 0) fractionDiff += 1; // el bus da la vuelta y vuelve a pasar
+      const durationMinutes = parseInt(r.duration) || 30;
+      const etaMinutes = Math.max(1, Math.round(fractionDiff * durationMinutes));
+      candidates.push({
+        bus: b, route: r, distanceMeters: Math.round(nearestOnRoute.dist), etaMinutes,
+      });
+    });
+  });
+
+  candidates.sort((a, b) => a.etaMinutes - b.etaMinutes);
+  return candidates.slice(0, 6);
+}
+
+function renderNearbyBuses(candidates){
+  const panel = document.getElementById('nearbyPanel');
+  const list = document.getElementById('nearbyList');
+  if(!candidates.length){
+    list.innerHTML = `<div class="empty-state" style="padding:16px;"><i class="bi bi-emoji-frown"></i>No hay buses pasando cerca de ti ahora mismo.</div>`;
+    panel.style.display = 'block';
+    return;
+  }
+  list.innerHTML = candidates.map(c => `
+    <div class="route-pill" data-bus="${c.bus.id}">
+      <span class="route-color" style="background:${c.route.color}"></span>
+      <div style="flex:1;">
+        <b style="font-size:.85rem;">${c.route.operator || ''} · ${c.route.name}</b><br>
+        <span class="text-dim" style="font-size:.76rem;">${Math.round(c.distanceMeters)} m de ti</span>
+      </div>
+      <span class="badge" style="background:rgba(76,255,110,.15);color:var(--neon);">~${c.etaMinutes} min</span>
+    </div>`).join('');
+
+  list.querySelectorAll('[data-bus]').forEach((el, i) => {
+    el.addEventListener('click', () => focusOnBus(candidates[i].bus.id, candidates[i].etaMinutes));
+  });
+  panel.style.display = 'block';
+}
+
+function buildRoutePills(routes){
+  const wrap = document.getElementById('routePills');
+  const byOperator = {};
+  routes.forEach(r => {
+    const op = r.operator || 'Otras rutas';
+    (byOperator[op] = byOperator[op] || []).push(r);
+  });
+  wrap.innerHTML = Object.entries(byOperator).map(([op, list]) => `
+    <div class="op-group-title">${op}</div>
+    ${list.map(r => `
+      <div class="route-pill" data-id="${r.id}">
+        <span class="route-color" style="background:${r.color}"></span>
+        <div><b style="font-size:.85rem;">${r.name}${r.code ? ' · '+r.code : ''}</b><br><span class="text-dim" style="font-size:.76rem;">${r.desc}</span></div>
+      </div>`).join('')}
+  `).join('');
+
+  wrap.querySelectorAll('.route-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      wrap.querySelectorAll('.route-pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+      const line = routeLines[p.dataset.id];
+      if(line) map.fitBounds(line.getBounds(), { padding:[40,40] });
+    });
+  });
+}
+
+function showBusCard(b, etaMinutes){
+  const panel = document.getElementById('busCard');
+  panel.innerHTML = `<div class="glass" style="padding:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="badge"><i class="bi bi-bus-front"></i> ${b.id}</span>
+      <button class="btn btn-ghost btn-sm" id="clearFocusBtn"><i class="bi bi-x-lg"></i> Ver todos</button>
+    </div>
+    <h4 style="margin:10px 0 2px;">${b.operator || ''}</h4>
+    <p class="text-dim" style="font-size:.8rem;margin:0 0 8px;">Conductor: ${b.driver}</p>
+    ${etaMinutes != null ? `<div class="badge" style="background:rgba(76,255,110,.15);color:var(--neon);margin-bottom:8px;"><i class="bi bi-clock"></i> Llega a tu punto en ~${etaMinutes} min</div>` : ''}
+    <div class="card-meta">
+      <span><i class="bi bi-clock"></i> ${b.status}</span>
+      <span><i class="bi bi-speedometer2"></i> ${b.speed}</span>
+      <span><i class="bi bi-people"></i> ${b.occupancy || '—'}</span>
+    </div>
+  </div>`;
+  panel.style.display = 'block';
+  document.getElementById('clearFocusBtn').addEventListener('click', clearBusFocus);
+}
+
+// Clima en vivo (Open-Meteo, gratis, sin API key) sobre Popayán
+async function loadWeather(){
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${POPAYAN_CENTER[0]}&longitude=${POPAYAN_CENTER[1]}&current=temperature_2m,weather_code`);
+    const data = await res.json();
+    const temp = Math.round(data.current.temperature_2m);
+    const code = data.current.weather_code;
+    const icons = { 0:'bi-sun', 1:'bi-brightness-high', 2:'bi-cloud-sun', 3:'bi-clouds', 45:'bi-cloud-fog', 51:'bi-cloud-drizzle', 61:'bi-cloud-rain', 63:'bi-cloud-rain-heavy', 80:'bi-cloud-lightning-rain', 95:'bi-cloud-lightning' };
+    const icon = icons[code] || 'bi-cloud';
+    const badge = document.getElementById('weatherBadge');
+    badge.innerHTML = `<i class="bi ${icon}"></i> ${temp}°C Popayán`;
+    badge.style.display = 'inline-flex';
+  } catch(e){ /* si falla el clima, no interrumpe el resto del mapa */ }
+}
+
+document.addEventListener('DOMContentLoaded', loadMap);
+
+let userMarker = null;
+let watchId = null;
+let lastNearbyFetch = 0;
+
+function updateUserPosition(pos, { recenter = false, pulseVibrate = true } = {}){
+  const coords = [pos.coords.latitude, pos.coords.longitude];
+
+  if(userMarker){
+    userMarker.setLatLng(coords);
+  } else {
+    userMarker = L.marker(coords, {
+      icon: L.divIcon({ className:'', iconSize:[26,26], iconAnchor:[13,13],
+        html:'<div style="width:26px;height:26px;border-radius:50%;background:#4dd2ff;border:3px solid #06090a;box-shadow:0 0 0 6px rgba(77,210,255,.25);animation:pulse-live 2s infinite;"></div>' })
+    }).addTo(map);
+    userMarker.bindPopup('<b>Tú estás aquí</b> · en vivo');
+  }
+
+  if(recenter) map.setView(coords, 16);
+  if(pulseVibrate && navigator.vibrate) navigator.vibrate(60);
+
+  // No saturamos el buscador de buses cercanos: máximo una consulta cada 8 segundos
+  const now = Date.now();
+  if(now - lastNearbyFetch > 8000){
+    lastNearbyFetch = now;
+    findNearbyBuses(coords[0], coords[1]).then(renderNearbyBuses);
+  }
+}
+
+function setLocationButtonState(active){
+  const btn = document.getElementById('myLocationBtn');
+  if(!btn) return;
+  btn.innerHTML = active
+    ? '<i class="bi bi-record-circle" style="color:var(--danger);"></i> Ubicación en vivo (toca para apagar)'
+    : '<i class="bi bi-crosshair"></i> Mi ubicación en tiempo real';
+}
+
+document.getElementById('myLocationBtn')?.addEventListener('click', () => {
+  if(!navigator.geolocation){
+    Components.toast('Tu navegador no soporta geolocalización', 'error');
+    return;
+  }
+
+  // Si ya está siguiendo, el botón lo apaga
+  if(watchId !== null){
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    setLocationButtonState(false);
+    Components.toast('Ubicación en tiempo real desactivada');
+    return;
+  }
+
+  // Primer punto inmediato (para centrar el mapa ya), luego seguimiento continuo
+  navigator.geolocation.getCurrentPosition(
+    (pos) => updateUserPosition(pos, { recenter: true }),
+    () => Components.toast('No pudimos acceder a tu ubicación. Revisa los permisos del navegador.', 'error'),
+    { enableHighAccuracy: true }
+  );
+
+  watchId = navigator.geolocation.watchPosition(
+    (pos) => updateUserPosition(pos, { recenter: false, pulseVibrate: false }),
+    (err) => {
+      Components.toast('Se perdió el acceso a tu ubicación (' + err.message + ').', 'error');
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+      setLocationButtonState(false);
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+  );
+  setLocationButtonState(true);
+  Components.toast('Ubicación en tiempo real activada — verás los buses cercanos actualizarse solos.');
+});
+
+// Si el usuario sale de la página con el seguimiento activo, lo apagamos (buena práctica de batería/privacidad)
+window.addEventListener('beforeunload', () => { if(watchId !== null) navigator.geolocation.clearWatch(watchId); });
+
+document.getElementById('findNearbyPlacesBtn')?.addEventListener('click', () => {
+  if(!userMarker){
+    Components.toast('Primero toca "Mi ubicación" arriba.', 'error');
+    return;
+  }
+  const coords = userMarker.getLatLng();
+  const categoria = document.getElementById('nearbyPlaceCategory').value;
+  const list = document.getElementById('nearbyPlacesList');
+  list.innerHTML = '<p class="text-dim" style="font-size:.8rem;">Buscando...</p>';
+
+  fetch(`{% url 'map:nearby' %}?categoria=${categoria}&lat=${coords.lat}&lng=${coords.lng}&radio=1500`)
+    .then(r => r.json())
+    .then(data => {
+      if(data.error){ list.innerHTML = `<p class="text-dim" style="font-size:.78rem;">${data.error}</p>`; return; }
+      if(!data.places.length){ list.innerHTML = '<p class="text-dim" style="font-size:.8rem;">Nada cerca en esta categoría.</p>'; return; }
+      list.innerHTML = data.places.slice(0, 8).map(p => `
+        <div class="route-pill" onclick="map.setView([${p.lat},${p.lng}], 17); L.marker([${p.lat},${p.lng}]).addTo(map).bindPopup('<b>${p.name}</b>').openPopup();">
+          <div><b style="font-size:.83rem;">${p.name}</b><br><span class="text-dim" style="font-size:.74rem;">${p.address || ''} ${p.distance_m ? '· ' + Math.round(p.distance_m) + ' m' : ''}</span></div>
+        </div>`).join('');
+    })
+    .catch(() => { list.innerHTML = '<p class="text-dim" style="font-size:.8rem;">Error buscando sitios cercanos.</p>'; });
+});
+
+function mostrarReportesTrafico(reportes) {
+  reportes.forEach(r => {
+    const colores = { bajo: '#90EE90', medio: '#FFD700', alto: '#FF6347', caótico: '#8B0000' };
+    const marker = L.marker([r.ubicacion_lat, r.ubicacion_lng], {
+      icon: L.divIcon({
+        className: '',
+        iconSize: [24, 24],
+        html: `<div style="width:24px;height:24px;border-radius:50%;background:${colores[r.nivel]};border:2px solid #fff;box-shadow:0 0 0 3px ${colores[r.nivel]}80;"></div>`
+      })
+    });
+    marker.bindPopup(`<b>${r.tipo}</b><br>Nivel: ${r.nivel}`);
+    marker.addTo(map);
+  });
+}
+
+</script>
+{% endblock %}

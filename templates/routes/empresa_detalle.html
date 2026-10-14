@@ -1,0 +1,63 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}{{ operator.name }}{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Empresa de transporte</span>{% endblock %}
+{% block page_title %}{{ operator.name }}{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:20px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+  <div class="card-meta">
+    <span><i class="bi bi-signpost-split"></i> {{ routes|length }} rutas activas</span>
+    {% if operator.fleet_size %}<span><i class="bi bi-truck"></i> ~{{ operator.fleet_size }} buses en flota</span>{% endif %}
+    {% if operator.phone %}<span><i class="bi bi-telephone"></i> {{ operator.phone }}</span>{% endif %}
+    <span class="rating"><i class="bi bi-star-fill"></i> {{ operator|avg_rating }}</span>
+  </div>
+  {% if user.is_authenticated %}
+  <form method="post" action="{% url 'interactions:rate_object' 'routes' 'operator' operator.pk %}" class="star-rate">
+    {% csrf_token %}
+    {% for i in "12345" %}<button type="submit" name="score" value="{{ i }}" class="btn btn-ghost btn-icon"><i class="bi bi-star"></i></button>{% endfor %}
+  </form>
+  {% endif %}
+</div>
+
+<h4 style="margin-bottom:14px;"><i class="bi bi-bus-front"></i> Buses de {{ operator.name }} ({{ buses|length }})</h4>
+<div class="grid grid-3" style="margin-bottom:28px;">
+  {% for b in buses %}
+  <div class="card" data-aos="fade-up">
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 class="card-title" style="margin:0;">Bus {{ b.code }}</h3>
+        <span class="badge">{{ b.get_status_display }}</span>
+      </div>
+      <p class="text-dim" style="font-size:.8rem;margin:6px 0;">Placa {{ b.plate }}{% if b.route %} · {{ b.route.name }}{% endif %}</p>
+      <div class="card-meta"><span><i class="bi bi-people"></i> {{ b.get_occupancy_display }}</span><span><i class="bi bi-speedometer2"></i> {{ b.last_speed_kmh|default:0 }} km/h</span></div>
+      <div class="card-actions">
+        <a class="btn btn-primary btn-sm" href="{% url 'map:page' %}?bus={{ b.code }}"><i class="bi bi-geo-alt"></i> Ver en el mapa</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-bus-front"></i>Esta empresa no tiene buses registrados.</div>
+  {% endfor %}
+</div>
+
+<h4 style="margin-bottom:14px;"><i class="bi bi-signpost-split"></i> Rutas</h4>
+<div class="grid grid-3">
+  {% for r in routes %}
+  <div class="card" data-aos="fade-up">
+    <div class="card-body">
+      <span class="badge" style="background:{{ r.color }}22;color:{{ r.color }};border-color:{{ r.color }}55;">
+        <span class="route-color" style="background:{{ r.color }};display:inline-block;"></span> {{ r.name }}{% if r.code %} · {{ r.code }}{% endif %}
+      </span>
+      <h3 class="card-title" style="margin-top:10px;">{{ r.origin }} → {{ r.destination }}</h3>
+      <p class="text-dim" style="font-size:.8rem;">{{ r.stops_summary }}</p>
+      <div class="card-actions">
+        <a class="btn btn-primary btn-sm" href="{% url 'routes:detail' r.pk %}"><i class="bi bi-info-circle"></i> Ver ruta</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-signpost"></i>Esta empresa no tiene rutas activas.</div>
+  {% endfor %}
+</div>
+{% endblock %}

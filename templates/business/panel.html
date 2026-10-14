@@ -1,0 +1,79 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Panel del negocio{% endblock %}
+{% block eyebrow %}<span class="eyebrow">{{ business.get_status_display }} · Plan {{ business.get_plan_display }}</span>{% endblock %}
+{% block page_title %}{{ business.name }}{% endblock %}
+{% block page_head_actions %}
+<a href="{% url 'business:detail' business.pk %}" class="btn btn-ghost btn-sm"><i class="bi bi-eye"></i> Ver perfil público</a>
+<a href="{% url 'business:edit' business.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+{% endblock %}
+
+{% block content %}
+{% if business.status == 'pendiente' %}
+<div class="glass" style="padding:16px;margin-bottom:20px;border-color:rgba(255,204,77,.4);">
+  <p style="margin:0;color:var(--warn);"><i class="bi bi-hourglass-split"></i> Tu negocio está en revisión. Te avisaremos cuando sea aprobado.</p>
+</div>
+{% elif business.status == 'rechazado' %}
+<div class="glass" style="padding:16px;margin-bottom:20px;border-color:rgba(255,92,92,.4);">
+  <p style="margin:0;color:var(--danger);"><i class="bi bi-x-circle"></i> Tu negocio fue rechazado. Motivo: {{ business.rejection_reason }}</p>
+</div>
+{% endif %}
+
+<div class="grid grid-4" style="margin-bottom:26px;">
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Visitas al perfil</span><div class="icon"><i class="bi bi-eye"></i></div></div><div class="value">{{ stats.views }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Clics (llamar/whatsapp/web)</span><div class="icon"><i class="bi bi-cursor"></i></div></div><div class="value">{{ stats.clicks }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Apariciones en búsquedas</span><div class="icon"><i class="bi bi-search"></i></div></div><div class="value">{{ stats.search_appearances }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Calificación</span><div class="icon"><i class="bi bi-star"></i></div></div><div class="value">{{ avg_rating }} ★</div></div>
+</div>
+
+<div class="grid" style="grid-template-columns:1.3fr 1fr;gap:22px;">
+  <div>
+    <div class="glass" style="padding:22px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h4 style="margin:0;">Promociones</h4>
+        <a href="{% url 'business:promotion_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nueva</a>
+      </div>
+      {% for p in promotions %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <b>{{ p.title }}</b> {% if p.discount_text %}<span class="badge">{{ p.discount_text }}</span>{% endif %}
+          <p class="text-dim" style="font-size:.78rem;margin:2px 0 0;">{% if p.is_expired %}Expirada{% elif p.is_active %}Activa{% else %}Inactiva{% endif %}{% if p.valid_until %} · hasta {{ p.valid_until }}{% endif %}</p>
+        </div>
+        <form method="post" action="{% url 'business:promotion_delete' p.pk %}" onsubmit="return confirm('¿Eliminar promoción?');">
+          {% csrf_token %}<button class="btn btn-ghost btn-icon" type="submit"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+      {% empty %}<p class="text-dim">Aún no tienes promociones.</p>{% endfor %}
+    </div>
+
+    <div class="glass" style="padding:22px;">
+      <h4 style="margin:0 0 14px;">Reseñas recientes</h4>
+      {% for r in reviews %}
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <b style="font-size:.85rem;">{{ r.user.get_full_name|default:r.user.username }}</b>
+        <p class="text-dim" style="font-size:.82rem;margin:2px 0;">{{ r.body }}</p>
+        <a href="{% url 'business:detail' business.pk %}#reseñas" class="text-neon" style="font-size:.78rem;">Responder →</a>
+      </div>
+      {% empty %}<p class="text-dim">Aún no tienes reseñas.</p>{% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h4 style="margin:0 0 10px;">Tu plan actual</h4>
+      <span class="badge" style="font-size:.85rem;padding:8px 16px;">{{ business.get_plan_display }}</span>
+      {% if business.plan_expires_at %}<p class="text-dim" style="font-size:.78rem;margin-top:8px;">Vence: {{ business.plan_expires_at|date:"d M Y" }}</p>{% endif %}
+      <p class="text-dim" style="font-size:.8rem;margin-top:10px;">
+        Plan Destacado y Premium te dan mayor visibilidad en el directorio y en las recomendaciones. Escríbenos a soporte@urbix.co para mejorar tu plan.
+      </p>
+    </div>
+    <div class="glass" style="padding:20px;">
+      <h4 style="margin:0 0 10px;">Historial de pagos</h4>
+      {% for s in subscriptions %}
+        <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem;">
+          {{ s.get_plan_display }} · {{ s.get_status_display }} · {{ s.created_at|date:"d M Y" }}
+        </div>
+      {% empty %}<p class="text-dim" style="font-size:.82rem;">Sin pagos registrados todavía.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

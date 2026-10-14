@@ -1,0 +1,37 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Auditoría{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Monitor del sistema</span>{% endblock %}
+{% block page_title %}Auditoría y actividad{% endblock %}
+
+{% block content %}
+<div class="grid grid-2" style="margin-bottom:22px;">
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Intentos de login fallidos</span><div class="icon"><i class="bi bi-shield-exclamation"></i></div></div><div class="value">{{ failed_logins_24h }}</div></div>
+  <div class="card stat-card"><div class="stat-top"><span class="text-dim" style="font-size:.8rem;">Acciones registradas</span><div class="icon"><i class="bi bi-journal-text"></i></div></div><div class="value">{{ activity|length }}</div></div>
+</div>
+
+<div class="grid" style="grid-template-columns:1.4fr 1fr;gap:22px;">
+  <div class="glass" style="padding:16px;overflow-x:auto;">
+    <h4 style="margin:0 0 12px;">Actividad reciente (acciones que modifican datos)</h4>
+    <table>
+      <thead><tr><th>Usuario</th><th>Método</th><th>Ruta</th><th>IP</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for a in activity %}
+        <tr><td>{{ a.user|default:"Anónimo" }}</td><td>{{ a.method }}</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;">{{ a.path }}</td><td>{{ a.ip_address|default:"—" }}</td><td>{{ a.created_at|timesince }}</td></tr>
+        {% empty %}<tr><td colspan="5"><div class="empty-state"><i class="bi bi-journal"></i>Sin actividad registrada aún.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="glass" style="padding:16px;overflow-x:auto;">
+    <h4 style="margin:0 0 12px;">Intentos de inicio de sesión</h4>
+    <table>
+      <thead><tr><th>Correo</th><th>Resultado</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for l in logins %}
+        <tr><td>{{ l.email }}</td><td><span class="status-dot {% if l.success %}ok{% else %}bad{% endif %}">{% if l.success %}Exitoso{% else %}Fallido{% endif %}</span></td><td>{{ l.created_at|timesince }}</td></tr>
+        {% empty %}<tr><td colspan="3"><div class="empty-state"><i class="bi bi-shield-lock"></i>Sin intentos registrados aún.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div id="pageLoader" class="loader-screen"><div class="logo-shine-wrap" style="border-radius:16px;"><img src="{% static 'images/urbix-logo.jpg' %}" style="width:60px;display:block;"></div><div class="spinner"></div></div>
+
+<div class="app-shell">
+  {% include "partials/sidebar.html" %}
+
+  <div class="main-area">
+    {% include "partials/navbar.html" %}
+
+    <main class="page-content">
+      {% block page_head %}
+      <div class="page-head">
+        <div>
+          {% block eyebrow %}<span class="eyebrow">URBIX</span>{% endblock %}
+          <h1>{% block page_title %}{% endblock %}</h1>
+        </div>
+        {% block page_head_actions %}{% endblock %}
+      </div>
+      {% endblock %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    {% include "partials/footer.html" %}
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal"></div>
+{% include "partials/chat_widget.html" %}
+{% include "partials/bottom_nav.html" %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  Components.init({ role: '{% if user.is_authenticated %}{% if user.role == "administrador" or user.is_superuser %}admin{% elif user.role == "conductor" %}conductor{% else %}usuario{% endif %}{% endif %}' });
+</script>
+{{ block.super }}
+{% endblock %}

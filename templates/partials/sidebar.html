@@ -1,0 +1,76 @@
+{% load static %}
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-chevron-left"></i></div>
+  <div class="sidebar-head">
+    <img src="{% static 'images/urbix-logo.jpg' %}" alt="Logo URBIX">
+    <div class="brand">UR<span>BIX</span></div>
+  </div>
+
+  {% if user.is_authenticated %}
+  <div class="role-tag">
+    {% if user.role == 'administrador' or user.is_superuser %}Panel administrador
+    {% elif user.role == 'conductor' %}Panel conductor
+    {% elif user.role == 'empresa' %}Panel de negocio
+    {% else %}Cuenta usuario{% endif %}
+  </div>
+
+  <nav class="sidebar-nav">
+    {% if user.role == 'administrador' or user.is_superuser %}
+      <a href="{% url 'dashboard:admin_mejorado' %}" class="{% if request.resolver_match.url_name == 'admin_mejorado' %}active{% endif %}"><i class="bi bi-speedometer2"></i><span>Dashboard operacional</span></a>
+      <a href="{% url 'dashboard:admin' %}" class="{% if request.resolver_match.url_name == 'admin' %}active{% endif %}"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+      <a href="{% url 'dashboard:admin_users' %}" class="{% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}"><i class="bi bi-people"></i><span>Usuarios</span></a>
+      <a href="{% url 'dashboard:admin_drivers' %}" class="{% if request.resolver_match.url_name == 'admin_drivers' %}active{% endif %}"><i class="bi bi-person-badge"></i><span>Conductores</span></a>
+      <a href="{% url 'buses:admin_list' %}" class="{% if 'buses' in request.resolver_match.app_name %}active{% endif %}"><i class="bi bi-bus-front"></i><span>Buses</span></a>
+      <a href="{% url 'routes:admin_list' %}" class="{% if request.resolver_match.url_name == 'admin_list' and request.resolver_match.app_name == 'routes' %}active{% endif %}"><i class="bi bi-signpost-split"></i><span>Rutas</span></a>
+      <a href="{% url 'routes:operator_admin_list' %}" class="{% if request.resolver_match.url_name == 'operator_admin_list' %}active{% endif %}"><i class="bi bi-buildings"></i><span>Empresas</span></a>
+      <a href="{% url 'dashboard:stats' %}" class="{% if request.resolver_match.url_name == 'stats' %}active{% endif %}"><i class="bi bi-bar-chart"></i><span>Estadísticas</span></a>
+      <a href="{% url 'dashboard:audit_log' %}" class="{% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}"><i class="bi bi-journal-check"></i><span>Auditoría</span></a>
+      <a href="{% url 'reports:admin_list' %}" class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}"><i class="bi bi-file-earmark-bar-graph"></i><span>Reportes</span></a>
+      <a href="{% url 'business:admin_list' %}" class="{% if request.resolver_match.app_name == 'business' %}active{% endif %}"><i class="bi bi-shop"></i><span>Centro Empresarial</span>{% if pending_businesses_count %}<span class="badge" style="margin-left:auto;">{{ pending_businesses_count }}</span>{% endif %}</a>
+      <a href="{% url 'notifications:crear_alerta' %}" class="{% if request.resolver_match.url_name == 'crear_alerta' %}active{% endif %}"><i class="bi bi-bell"></i><span>Mis alertas</span></a>
+      <a href="{% url 'map:page' %}"><i class="bi bi-map"></i><span>Mapa</span></a>
+      <a href="{% url 'accounts:profile' %}"><i class="bi bi-gear"></i><span>Configuración</span></a>
+
+    {% elif user.role == 'conductor' %}
+      <a href="{% url 'map:conductor' %}" class="{% if request.resolver_match.url_name == 'conductor' %}active{% endif %}"><i class="bi bi-map"></i><span>Mi mapa</span></a>
+      <a href="{% url 'dashboard:driver' %}" class="{% if request.resolver_match.url_name == 'driver' %}active{% endif %}"><i class="bi bi-signpost-split"></i><span>Ruta asignada</span></a>
+      <a href="{% url 'dashboard:driver' %}"><i class="bi bi-bus-front"></i><span>Mi bus</span></a>
+      <a href="{% url 'dashboard:driver' %}"><i class="bi bi-arrow-repeat"></i><span>Vueltas</span></a>
+      <a href="{% url 'reports:create' %}" class="{% if request.resolver_match.url_name == 'create' and request.resolver_match.app_name == 'reports' %}active{% endif %}"><i class="bi bi-flag"></i><span>Reportes</span></a>
+      <a href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i><span>Perfil</span></a>
+
+    {% elif user.role == 'empresa' %}
+      <a href="{% url 'business:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i><span>Mi panel</span></a>
+      <a href="{% url 'business:directory' %}" class="{% if request.resolver_match.url_name == 'directory' %}active{% endif %}"><i class="bi bi-shop"></i><span>Directorio</span></a>
+      <a href="{% url 'business:register' %}" class="{% if request.resolver_match.url_name == 'register' %}active{% endif %}"><i class="bi bi-plus-circle"></i><span>Registrar otro negocio</span></a>
+      <a href="{% url 'notifications:crear_alerta' %}" class="{% if request.resolver_match.url_name == 'crear_alerta' %}active{% endif %}"><i class="bi bi-bell"></i><span>Mis alertas</span></a>
+      <a href="{% url 'map:page' %}"><i class="bi bi-map"></i><span>Mapa</span></a>
+      <a href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i><span>Perfil</span></a>
+
+    {% else %}
+      <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="bi bi-house-door"></i><span>Inicio</span></a>
+      <a href="{% url 'assistant:search' %}" class="{% if request.resolver_match.app_name == 'assistant' %}active{% endif %}"><i class="bi bi-stars"></i><span>Buscador IA</span></a>
+      <a href="{% url 'notifications:crear_alerta' %}" class="{% if request.resolver_match.url_name == 'crear_alerta' %}active{% endif %}"><i class="bi bi-bell"></i><span>Mis alertas</span></a>
+      <a href="{% url 'map:page' %}" class="{% if request.resolver_match.app_name == 'map' %}active{% endif %}"><i class="bi bi-map"></i><span>Mapa</span></a>
+      <a href="{% url 'routes:planner' %}" class="{% if request.resolver_match.url_name == 'planner' %}active{% endif %}"><i class="bi bi-signpost-2"></i><span>Planificar viaje</span></a>
+      <a href="{% url 'routes:operators' %}" class="{% if request.resolver_match.url_name == 'operators' or request.resolver_match.url_name == 'operator_detail' %}active{% endif %}"><i class="bi bi-bus-front"></i><span>Buses</span></a>
+      <a href="{% url 'routes:compare' %}" class="{% if request.resolver_match.url_name == 'compare' %}active{% endif %}"><i class="bi bi-bar-chart-steps"></i><span>Comparar rutas</span></a>
+      <a href="{% url 'routes:schedules' %}" class="{% if request.resolver_match.url_name == 'schedules' %}active{% endif %}"><i class="bi bi-clock-history"></i><span>Horarios</span></a>
+      <a href="{% url 'routes:stops' %}" class="{% if request.resolver_match.url_name == 'stops' %}active{% endif %}"><i class="bi bi-geo-alt"></i><span>Paraderos</span></a>
+      <a href="{% url 'restaurants:list' %}" class="{% if request.resolver_match.app_name == 'restaurants' %}active{% endif %}"><i class="bi bi-cup-hot"></i><span>Restaurantes</span></a>
+      <a href="{% url 'hotels:list' %}" class="{% if request.resolver_match.app_name == 'hotels' %}active{% endif %}"><i class="bi bi-building"></i><span>Hoteles</span></a>
+      <a href="{% url 'tourism:list' %}" class="{% if request.resolver_match.app_name == 'tourism' %}active{% endif %}"><i class="bi bi-camera"></i><span>Turismo</span></a>
+      <a href="{% url 'events:list' %}" class="{% if request.resolver_match.app_name == 'events' %}active{% endif %}"><i class="bi bi-calendar-event"></i><span>Eventos</span></a>
+      <a href="{% url 'business:directory' %}" class="{% if request.resolver_match.app_name == 'business' %}active{% endif %}"><i class="bi bi-shop"></i><span>Centro Empresarial</span></a>
+      <a href="{% url 'interactions:favorite_list' %}" class="{% if request.resolver_match.url_name == 'favorite_list' %}active{% endif %}"><i class="bi bi-heart"></i><span>Favoritos</span></a>
+      <a href="{% url 'interactions:history_list' %}" class="{% if request.resolver_match.url_name == 'history_list' %}active{% endif %}"><i class="bi bi-clock-history"></i><span>Historial</span></a>
+      <a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person"></i><span>Perfil</span></a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-foot">
+    <a href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span></a>
+  </div>
+  {% endif %}
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

@@ -1,0 +1,90 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block navbar_title %}Perfil{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Tu cuenta</span>{% endblock %}
+{% block page_title %}Perfil{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:320px 1fr;gap:22px;align-items:start;">
+  <div class="glass" style="padding:26px;text-align:center;">
+    {% if user.avatar %}<img src="{{ user.avatar.url }}" class="avatar" style="width:96px;height:96px;margin:0 auto 14px;">
+    {% else %}<img src="https://i.pravatar.cc/160?u={{ user.email }}" class="avatar" style="width:96px;height:96px;margin:0 auto 14px;">{% endif %}
+    <h3 style="margin:0;">{{ user.get_full_name|default:user.username }}</h3>
+    <p class="text-dim" style="font-size:.85rem;">{{ user.email }}</p>
+    <span class="badge" style="margin-top:8px;">{{ user.get_role_display }}</span>
+
+    <div style="margin-top:18px;padding:14px;background:var(--surface);border-radius:var(--radius-sm);text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <b style="font-size:.88rem;"><i class="bi bi-award text-neon"></i> {{ gamification.level_name }}</b>
+        <span class="text-dim" style="font-size:.78rem;">{{ gamification.points }} pts</span>
+      </div>
+      {% if gamification.next_threshold %}
+      <div style="height:6px;background:var(--surface-strong);border-radius:100px;margin-top:8px;overflow:hidden;">
+        <div style="height:100%;width:{{ gamification.progress_pct }}%;background:linear-gradient(90deg,var(--neon),var(--neon-2));"></div>
+      </div>
+      <p class="text-dim" style="font-size:.7rem;margin-top:4px;">{{ gamification.next_threshold }} pts para el siguiente nivel</p>
+      {% else %}
+      <p class="text-dim" style="font-size:.7rem;margin-top:6px;">¡Nivel máximo alcanzado!</p>
+      {% endif %}
+      {% if gamification.badges %}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+        {% for b in gamification.badges %}
+          <span class="badge" title="{{ b.label }}"><i class="bi {{ b.icon }}"></i></span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <hr style="border-color:var(--border);margin:20px 0;">
+    <div style="text-align:left;">
+      <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-block" style="margin-bottom:8px;"><i class="bi bi-bell"></i> Notificaciones</a>
+      <a href="{% url 'interactions:history_list' %}" class="btn btn-ghost btn-block" style="margin-bottom:8px;"><i class="bi bi-clock-history"></i> Historial</a>
+      <a href="{% url 'accounts:emergency_contacts' %}" class="btn btn-ghost btn-block" style="margin-bottom:8px;"><i class="bi bi-shield-exclamation"></i> Contactos de emergencia</a>
+      <a href="{% url 'accounts:logout' %}" class="btn btn-ghost btn-block"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
+    </div>
+  </div>
+
+  <div>
+    <div class="glass" style="padding:24px;margin-bottom:20px;">
+      <h4>Información personal</h4>
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="grid grid-2">
+          <div class="field"><label>Nombre</label>{{ form.first_name }}</div>
+          <div class="field"><label>Apellido</label>{{ form.last_name }}</div>
+          <div class="field"><label>Teléfono</label>{{ form.phone }}</div>
+          <div class="field"><label>Ciudad</label>{{ form.city }}</div>
+          <div class="field" style="grid-column:span 2;"><label>Foto de perfil</label>{{ form.avatar }}</div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Guardar cambios</button>
+      </form>
+    </div>
+
+    <div class="glass" style="padding:24px;margin-bottom:20px;">
+      <h4>Cambiar contraseña</h4>
+      <form method="post" action="{% url 'accounts:change_password' %}" novalidate>
+        {% csrf_token %}
+        <div class="grid grid-2">
+          <div class="field"><label>Contraseña actual</label><input type="password" name="current_password" required></div>
+          <div class="field"></div>
+          <div class="field"><label>Nueva contraseña</label><input type="password" name="password1" required></div>
+          <div class="field"><label>Confirmar nueva contraseña</label><input type="password" name="password2" required></div>
+        </div>
+        <button type="submit" class="btn btn-outline"><i class="bi bi-shield-lock"></i> Actualizar contraseña</button>
+      </form>
+    </div>
+
+    <h4 style="margin-top:24px;">Mis favoritos</h4>
+    <div class="grid grid-3">
+      {% for fav in favorites %}
+        <div class="card"><div class="card-body">
+          <span class="badge">{{ fav.content_type.model }}</span>
+          <h3 class="card-title" style="margin-top:8px;">{{ fav.content_object }}</h3>
+        </div></div>
+      {% empty %}
+        <div class="empty-state"><i class="bi bi-heart"></i>Aún no tienes favoritos guardados.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

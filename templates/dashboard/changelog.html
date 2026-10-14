@@ -1,0 +1,37 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Novedades{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Historial de versiones</span>{% endblock %}
+{% block page_title %}Novedades de URBIX{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;">
+  <div class="glass" style="padding:20px;margin-bottom:14px;">
+    <span class="badge">Más reciente</span>
+    <h4 style="margin:10px 0 8px;">Planificador de viaje, empresas reales y seguridad</h4>
+    <ul style="color:var(--text-dim);font-size:.88rem;padding-left:18px;">
+      <li>Planificador de viaje con rutas directas y transbordos</li>
+      <li>4 empresas reales de Popayán (Transpubenza, Translibertad, Sotracauca, Transtambo) con sus rutas exactas</li>
+      <li>Botón SOS y contactos de emergencia</li>
+      <li>Comparador de rutas, calificación de rutas y empresas</li>
+      <li>Estadísticas con gráficos para el panel administrador</li>
+    </ul>
+  </div>
+  <div class="glass" style="padding:20px;margin-bottom:14px;">
+    <h4 style="margin:0 0 8px;">Asistente con inteligencia artificial</h4>
+    <ul style="color:var(--text-dim);font-size:.88rem;padding-left:18px;">
+      <li>Chatbot para resolver dudas sobre rutas, lugares y horarios</li>
+      <li>Buscador inteligente en lenguaje natural</li>
+      <li>Recomendaciones personalizadas basadas en tus favoritos</li>
+    </ul>
+  </div>
+  <div class="glass" style="padding:20px;">
+    <h4 style="margin:0 0 8px;">Primera versión</h4>
+    <ul style="color:var(--text-dim);font-size:.88rem;padding-left:18px;">
+      <li>Mapa en tiempo real con Leaflet y OpenStreetMap</li>
+      <li>Rutas, horarios, restaurantes, hoteles, turismo y eventos</li>
+      <li>Registro, login, roles de usuario/conductor/administrador</li>
+      <li>Panel administrativo con CRUD completo</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

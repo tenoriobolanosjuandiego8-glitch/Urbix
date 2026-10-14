@@ -1,0 +1,32 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Horarios{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Frecuencias de paso</span>{% endblock %}
+{% block page_title %}Horarios por ruta{% endblock %}
+
+{% block content %}
+<div class="tabs">
+  {% for r in routes %}
+    <a href="?ruta={{ r.pk }}" class="tab {% if selected.pk == r.pk %}active{% endif %}">{{ r.name }}</a>
+  {% endfor %}
+</div>
+
+{% if selected %}
+<div class="glass" style="padding:22px;">
+  <h3 style="color:{{ selected.color }}">{{ selected.name }}: {{ selected.origin }} - {{ selected.destination }}</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tipo de día</th><th>Hora de salida</th><th>Frecuencia</th></tr></thead>
+      <tbody>
+        {% for e in entries %}
+          <tr><td>{{ e.get_day_type_display }}</td><td>{{ e.departure_time }}</td><td>Cada {{ e.frequency_minutes }} min</td></tr>
+        {% empty %}
+          <tr><td colspan="3"><div class="empty-state"><i class="bi bi-clock"></i>Sin horarios registrados para esta ruta.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state"><i class="bi bi-signpost"></i>No hay rutas activas.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Empresas{% endblock %}
+{% block eyebrow %}<span class="eyebrow">Transporte urbano de Popayán</span>{% endblock %}
+{% block page_title %}Empresas operadoras{% endblock %}
+
+{% block content %}
+<div class="grid grid-3">
+  {% for op in operators %}
+  <a href="{% url 'routes:operator_detail' op.pk %}" class="card" data-aos="fade-up" style="text-decoration:none;">
+    <div class="card-body">
+      <div style="width:46px;height:46px;border-radius:12px;background:{{ op.brand_color }}22;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <i class="bi bi-bus-front" style="color:{{ op.brand_color }};font-size:1.3rem;"></i>
+      </div>
+      <h3 class="card-title">{{ op.name }}</h3>
+      <div class="card-meta">
+        <span><i class="bi bi-signpost-split"></i> {{ op.routes_count }} rutas</span>
+        {% if op.fleet_size %}<span><i class="bi bi-truck"></i> ~{{ op.fleet_size }} buses</span>{% endif %}
+      </div>
+      <span class="btn btn-ghost btn-sm" style="margin-top:10px;">Ver rutas <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+  {% empty %}
+  <div class="empty-state"><i class="bi bi-bus-front"></i>Aún no hay empresas registradas.</div>
+  {% endfor %}
+</div>
+{% endblock %}

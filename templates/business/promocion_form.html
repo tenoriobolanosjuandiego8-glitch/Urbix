@@ -1,0 +1,18 @@
+{% extends "base_app.html" %}
+{% block navbar_title %}Nueva promoción{% endblock %}
+{% block page_title %}Nueva promoción{% endblock %}
+
+{% block content %}
+<div class="glass" style="padding:26px;max-width:520px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field"><label>{{ field.label }}</label>{{ field }}</div>
+    {% endfor %}
+    <div class="card-actions">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Crear promoción</button>
+      <a href="{% url 'business:dashboard' %}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

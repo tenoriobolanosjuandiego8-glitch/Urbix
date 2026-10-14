@@ -1,0 +1,59 @@
+{% extends "base_app.html" %}
+{% load interactions_extras %}
+{% block navbar_title %}{{ restaurant.name }}{% endblock %}
+{% block eyebrow %}<span class="eyebrow">{{ restaurant.tag }}</span>{% endblock %}
+{% block page_title %}{{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;">
+  <div>
+    {% if restaurant.cover_image %}<img src="{{ restaurant.cover_image.url }}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-md);margin-bottom:16px;">{% endif %}
+    {% if restaurant.gallery.all %}
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      {% for img in restaurant.gallery.all %}<img src="{{ img.image.url }}" style="border-radius:var(--radius-sm);aspect-ratio:1;object-fit:cover;">{% endfor %}
+    </div>
+    {% endif %}
+    <p>{{ restaurant.description }}</p>
+
+    <h4 style="margin-top:24px;">Comentarios</h4>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'interactions:comment_create' 'restaurants' 'restaurant' restaurant.pk %}" style="margin-bottom:16px;">
+      {% csrf_token %}
+      <textarea name="body" placeholder="Escribe un comentario..." required></textarea>
+      <button type="submit" class="btn btn-outline btn-sm" style="margin-top:8px;"><i class="bi bi-send"></i> Publicar</button>
+    </form>
+    {% endif %}
+    {% for c in restaurant|comments_for %}
+      <div class="glass" style="padding:14px;margin-bottom:10px;">
+        <b>{{ c.user.get_full_name|default:c.user.username }}</b>
+        <span class="text-dim" style="font-size:.76rem;">· {{ c.created_at|timesince }}</span>
+        <p class="text-dim" style="margin:4px 0 0;">{{ c.body }}</p>
+      </div>
+    {% empty %}
+      <p class="text-dim">Sé el primero en comentar.</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <div class="card-meta"><span class="rating"><i class="bi bi-star-fill"></i> {{ restaurant|avg_rating }}</span><span>{{ restaurant.price_range }}</span></div>
+      <p class="text-dim" style="font-size:.85rem;"><i class="bi bi-geo-alt"></i> {{ restaurant.address }}</p>
+      <p class="text-dim" style="font-size:.85rem;"><i class="bi bi-clock"></i> {{ restaurant.opening_hours }}</p>
+      {% if restaurant.phone %}<p class="text-dim" style="font-size:.85rem;"><i class="bi bi-telephone"></i> {{ restaurant.phone }}</p>{% endif %}
+      <a href="{% url 'map:page' %}" class="btn btn-primary btn-block" style="margin-top:12px;"><i class="bi bi-signpost"></i> Cómo llegar</a>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="glass" style="padding:20px;">
+      <h4 style="margin:0 0 10px;">Califica este lugar</h4>
+      <form method="post" action="{% url 'interactions:rate_object' 'restaurants' 'restaurant' restaurant.pk %}" class="star-rate">
+        {% csrf_token %}
+        {% for i in "12345" %}
+          <button type="submit" name="score" value="{{ i }}" class="btn btn-ghost btn-icon"><i class="bi bi-star"></i></button>
+        {% endfor %}
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

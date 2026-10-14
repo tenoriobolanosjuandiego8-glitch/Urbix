@@ -1,0 +1,11 @@
+<footer class="site-footer">
+  <span>© {% now "Y" %} URBIX · Movilidad Inteligente en Popayán</span>
+  <div class="footer-links">
+    <a href="{% url 'dashboard:help' %}">Ayuda</a>
+    <a href="{% url 'dashboard:changelog' %}">Novedades</a>
+    <a href="{% url 'dashboard:privacy' %}">Privacidad</a>
+    <a href="{% url 'dashboard:terms' %}">Términos</a>
+    <a href="mailto:soporte@urbix.co">Contacto</a>
+    {% if user.is_authenticated %}<a href="{% url 'accounts:profile' %}">Configuración</a>{% endif %}
+  </div>
+</footer>

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Crear cuenta · URBIX{% endblock %}
+
+{% block body %}
+<div class="auth-shell">
+  <div class="auth-visual">
+    <svg class="map-lines" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 300 L120 260 L180 300 L260 220 L340 260" stroke="#4CFF6E" stroke-width="2" fill="none"/>
+      <path d="M40 120 L140 160 L220 100 L320 150" stroke="#1AFFB0" stroke-width="2" fill="none"/>
+    </svg>
+    <div style="position:relative;z-index:1;">
+      <span class="eyebrow">Únete a URBIX</span>
+      <h2 style="font-size:2rem;max-width:420px;">Crea tu cuenta y empieza a moverte por Popayán.</h2>
+      <p class="text-dim" style="max-width:380px;">Guarda tus rutas y lugares favoritos, y recibe alertas en tiempo real de tu bus.</p>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-card glass">
+      <div class="auth-logo">
+        <img src="{% static 'images/urbix-logo.jpg' %}" alt="URBIX">
+        <div><h3 style="margin:0;">UR<span class="text-neon">BIX</span></h3><span class="text-dim" style="font-size:.78rem;">Crear cuenta</span></div>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="field"><label>Nombre completo</label><div class="input-wrap"><i class="bi bi-person"></i>{{ form.name }}</div></div>
+        <div class="field"><label>Correo electrónico</label><div class="input-wrap"><i class="bi bi-envelope"></i>{{ form.email }}</div>
+          {% for error in form.email.errors %}<p style="color:var(--danger);font-size:.78rem;">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field"><label>Contraseña</label><div class="input-wrap"><i class="bi bi-lock"></i>{{ form.password1 }}
+          <button type="button" class="toggle-pass" onclick="togglePasswordVisibility(this)"><i class="bi bi-eye"></i></button></div>
+          {% for error in form.password1.errors %}<p style="color:var(--danger);font-size:.78rem;">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field"><label>Confirmar contraseña</label><div class="input-wrap"><i class="bi bi-lock-fill"></i>{{ form.password2 }}
+          <button type="button" class="toggle-pass" onclick="togglePasswordVisibility(this)"><i class="bi bi-eye"></i></button></div>
+          {% for error in form.password2.errors %}<p style="color:var(--danger);font-size:.78rem;">{{ error }}</p>{% endfor %}
+        </div>
+        <label class="checkbox-row" style="margin-bottom:18px;">{{ form.terms }} Acepto los <a href="{% url 'dashboard:terms' %}" target="_blank" class="text-neon">términos y condiciones</a> y la <a href="{% url 'dashboard:privacy' %}" target="_blank" class="text-neon">política de privacidad</a></label>
+        <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-person-plus"></i> Crear cuenta</button>
+      </form>
+
+      <p style="text-align:center;margin-top:22px;font-size:.85rem;color:var(--text-dim);">
+        ¿Ya tienes cuenta? <a href="{% url 'accounts:login' %}" class="text-neon" style="font-weight:700;">Inicia sesión</a>
+      </p>
+    </div>
+  </div>
+</div>
+<script>
+function togglePasswordVisibility(btn){
+  const input = btn.parentElement.querySelector('input');
+  const icon = btn.querySelector('i');
+  if(input.type === 'password'){ input.type='text'; icon.className='bi bi-eye-slash'; }
+  else { input.type='password'; icon.className='bi bi-eye'; }
+}
+</script>
+{% endblock %}
